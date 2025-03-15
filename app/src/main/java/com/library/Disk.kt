@@ -5,13 +5,10 @@ class Disk(
     access: Boolean,
     name: String,
     val type: String
-): LibraryObjects(objectId, access, name), Home_able {
+): LibraryObjects(objectId, access, name), Homeable {
     override fun longInformation() {
-        if (access){
-            println("$type $name доступен: Да")
-        } else {
-            println("$type $name доступен: Нет")
-        }
+        val possible = if (access) "Да" else "Нет"
+        println("$type $name доступен: $possible")
     }
 
     override fun returnObject() {

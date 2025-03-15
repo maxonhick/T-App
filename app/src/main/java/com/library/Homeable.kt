@@ -1,5 +1,5 @@
 package com.library
 
-interface Home_able {
+interface Homeable {
     fun getHome()
 }

@@ -7,13 +7,8 @@ class Newspaper(
     val releaseNumber: Int
 ): LibraryObjects(objectId, access, name), Readable {
     override fun longInformation() {
-        if (access){
-            println("выпуск: $releaseNumber газеты $name c id: " +
-                    "$objectId доступен: Да")
-        } else {
-            println("выпуск: $releaseNumber газеты $name c id: " +
-                    "$objectId доступен: Нет")
-        }
+        val possible = if (access) "Да" else "Нет"
+        println("выпуск: $releaseNumber газеты $name c id: $objectId доступен: $possible")
     }
 
     override fun returnObject() {

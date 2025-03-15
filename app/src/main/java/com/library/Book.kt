@@ -6,15 +6,10 @@ class Book(
     name: String,
     val pages: Int,
     val author: String
-): LibraryObjects(objectId, access, name), Home_able, Readable {
+): LibraryObjects(objectId, access, name), Homeable, Readable {
     override fun longInformation() {
-        if (access){
-            println("книга: $name ($pages стр.) автора: " +
-                    "$author с id: $objectId доступна: Да")
-        } else {
-            println("книга: $name ($pages стр.) автора: " +
-                    "$author с id: $objectId доступна: Нет")
-        }
+        val possible = if (access) "Да" else "Нет"
+        println("книга: $name ($pages стр.) автора: $author с id: $objectId доступна: $possible")
     }
 
     override fun getHome() {
