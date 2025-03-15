@@ -36,7 +36,23 @@ class Library {
         println("Введите номер книги или любую другую комбинацию, чтобы вернуться в изначальное меню")
         val index = readlnOrNull()?.toIntOrNull() ?: 0
         if (0  < index && index < booksList.size){
-            booksList[index - 1].workWithObject()
+            while (true){
+                println("""
+                1. Взять домой
+                2. Читать в читальном зале
+                3. Показать подробную информацию
+                4. Вернуть
+                5. Вернуться в изначальное меню
+            """.trimIndent())
+                when (readlnOrNull()?.toIntOrNull()){
+                    1 -> booksList[index - 1].getHome()
+                    2 -> booksList[index - 1].getRead()
+                    3 -> booksList[index - 1].longInformation()
+                    4 -> booksList[index - 1].returnObject()
+                    5 -> break
+                    else -> println("Неверный выбор, попробуйте ещё раз.")
+                }
+            }
         }
         println("""
             1. Показать книги
@@ -60,7 +76,23 @@ class Library {
         println("Введите номер газеты или любую другую комбинацию, чтобы вернуться в изначальное меню")
         val index = readlnOrNull()?.toIntOrNull() ?: 0
         if (0  < index && index < newspapersList.size){
-            newspapersList[index - 1].workWithObject()
+            while (true){
+                println("""
+                1. Взять домой
+                2. Читать в читальном зале
+                3. Показать подробную информацию
+                4. Вернуть
+                5. Вернуться в изначальное меню
+            """.trimIndent())
+                when (readlnOrNull()?.toIntOrNull()){
+                    1 -> println("Газету нельзя взять домой")
+                    2 -> newspapersList[index - 1].getRead()
+                    3 -> newspapersList[index - 1].longInformation()
+                    4 -> newspapersList[index - 1].returnObject()
+                    5 -> break
+                    else -> println("Неверный выбор, попробуйте ещё раз.")
+                }
+            }
         }
         println("""
             1. Показать книги
@@ -84,7 +116,23 @@ class Library {
         println("Введите номер диска или любую другую комбинацию, чтобы вернуться в изначальное меню")
         val index = readlnOrNull()?.toIntOrNull() ?: 0
         if (0  < index && index < disksList.size){
-            disksList[index - 1].workWithObject()
+            while (true){
+                println("""
+                1. Взять домой
+                2. Читать в читальном зале
+                3. Показать подробную информацию
+                4. Вернуть
+                5. Вернуться в изначальное меню
+            """.trimIndent())
+                when (readlnOrNull()?.toIntOrNull()){
+                    1 -> disksList[index - 1].getHome()
+                    2 -> println("Диск нельзя взять в читальный зал")
+                    3 -> disksList[index - 1].longInformation()
+                    4 -> disksList[index - 1].returnObject()
+                    5 -> break
+                    else -> println("Неверный выбор, попробуйте ещё раз.")
+                }
+            }
         }
         println("""
             1. Показать книги
