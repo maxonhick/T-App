@@ -8,11 +8,11 @@ class Library {
         Book(objectId = 3876, access = true, name = "Война и мир", pages = 1472, author = "Толстой")
     )
     val newspapersList: List<Newspaper> = listOf(
-        Newspaper(objectId =  6341, access = true, name = "WSJ", releaseNumber = 120225),
-        Newspaper(objectId =  6371, access = true, name = "Зеленоград.ru", releaseNumber = 121124),
-        Newspaper(objectId =  6383, access = true, name = "Спорт-Экпресс", releaseNumber = 230125),
-        Newspaper(objectId =  6342, access = true, name = "WSJ", releaseNumber = 200225),
-        Newspaper(objectId =  6392, access = true, name = "Коммерсантъ", releaseNumber = 130325)
+        Newspaper(objectId =  6341, access = true, name = "WSJ", releaseNumber = 120225, month = "январь"),
+        Newspaper(objectId =  6371, access = true, name = "Зеленоград.ru", releaseNumber = 121124, month = "март"),
+        Newspaper(objectId =  6383, access = true, name = "Спорт-Экпресс", releaseNumber = 230125, month = "октябрь"),
+        Newspaper(objectId =  6342, access = true, name = "WSJ", releaseNumber = 200225, month = "июнь"),
+        Newspaper(objectId =  6392, access = true, name = "Коммерсантъ", releaseNumber = 130325, month = "июль")
     )
     val disksList: List<Disk> = listOf(
         Disk(objectId = 9234, access = true, name = "Назад в будущее", type = "DVD"),
@@ -58,7 +58,8 @@ class Library {
             1. Показать книги
             2. Показать газеты
             3. Показать диски
-            4. Завершить работу
+            4. Управление менеджером
+            5. Завершить работу
         """.trimIndent())
     }
 
@@ -98,7 +99,8 @@ class Library {
             1. Показать книги
             2. Показать газеты
             3. Показать диски
-            4. Завершить работу
+            4. Управление менеджером
+            5. Завершить работу
         """.trimIndent())
     }
 
@@ -138,7 +140,45 @@ class Library {
             1. Показать книги
             2. Показать газеты
             3. Показать диски
-            4. Завершить работу
+            4. Управление менеджером
+            5. Завершить работу
+        """.trimIndent())
+    }
+
+    fun workManager(manager: Manager<Shops<LibraryObjects>>){
+        val booksShop = BooksShop()
+        val disksShop = DisksShop()
+        val newspapersShop = NewspapersShop()
+        while (true){
+            println("""
+                1. Купить книгу
+                2. Купить диск
+                3. Купить газету
+                4. Вернуться в изначальное меню
+            """.trimIndent())
+            when (readlnOrNull()?.toIntOrNull()){
+                1 -> {
+                    println("Менеджер купил следующий объект:")
+                    manager.buySomething(booksShop).longInformation()
+                }
+                2 -> {
+                    println("Менеджер купил следующий объект:")
+                    manager.buySomething(disksShop).longInformation()
+                }
+                3 -> {
+                    println("Менеджер купил следующий объект:")
+                    manager.buySomething(newspapersShop).longInformation()
+                }
+                4 -> break
+                else -> println("Неверный выбор, попробуйте ещё раз.")
+            }
+        }
+        println("""
+            1. Показать книги
+            2. Показать газеты
+            3. Показать диски
+            4. Управление менеджером
+            5. Завершить работу
         """.trimIndent())
     }
 }
