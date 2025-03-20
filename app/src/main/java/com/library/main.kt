@@ -1,7 +1,7 @@
 package com.library
 
 fun main(){
-    val library: Library = Library()
+    val library = Library()
     val manager = Manager<Shops<LibraryObjects>>()
 
     println("""
