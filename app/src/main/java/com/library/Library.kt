@@ -61,8 +61,13 @@ class Library {
                     3 -> booksList[index - 1].longInformation()
                     4 -> booksList[index - 1].returnObject()
                     5 -> {
-                        println("Был создан диск:")
-                        digitization.transform(booksList[index - 1]).longInformation()
+                        val obj = digitization.transform(booksList[index - 1])
+                        if (obj is Disk) {
+                            println("Был создан диск:")
+                            obj.longInformation()
+                        } else {
+                            println("Объект недоступен, его нельзя оцифровать")
+                        }
                     }
                     6 -> break
                     else -> println("Неверный выбор, попробуйте ещё раз.")
@@ -107,8 +112,13 @@ class Library {
                     3 -> newspapersList[index - 1].longInformation()
                     4 -> newspapersList[index - 1].returnObject()
                     5 -> {
-                        println("Был создан диск:")
-                        digitization.transform(newspapersList[index - 1]).longInformation()
+                        val obj = digitization.transform(newspapersList[index - 1])
+                        if (obj is Disk) {
+                            println("Был создан диск:")
+                            obj.longInformation()
+                        } else {
+                            println("Объект недоступен, его нельзя оцифровать")
+                        }
                     }
                     6 -> break
                     else -> println("Неверный выбор, попробуйте ещё раз.")
