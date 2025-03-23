@@ -4,7 +4,7 @@ class Disk(
     objectId: Int,
     access: Boolean,
     name: String,
-    val type: String
+    val type: DiskType
 ): LibraryObjects(objectId, access, name), Homeable {
     override fun longInformation() {
         val possible = if (access) "Да" else "Нет"
