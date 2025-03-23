@@ -1,8 +1,8 @@
 package com.library
 
 class DisksShop: Shops<LibraryObjects>() {
-    override fun buy(): Disk {
-        val disk = Disk(4567, true, "MIB3", "DVD")
+    override fun sell(): Disk {
+        val disk = Disk(4567, true, "MIB3", DiskType.DVD)
         return disk
     }
 }

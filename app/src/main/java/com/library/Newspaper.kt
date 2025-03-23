@@ -5,7 +5,7 @@ class Newspaper(
     access: Boolean,
     name: String,
     val releaseNumber: Int,
-    val month: String
+    val month: Month
 ): LibraryObjects(objectId, access, name), Readable {
     override fun longInformation() {
         val possible = if (access) "Да" else "Нет"

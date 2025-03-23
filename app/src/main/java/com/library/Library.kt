@@ -16,16 +16,16 @@ class Library {
         Book(objectId = 3609, access = true, name = "Чёрный обелиск", pages = 479, author = "Ремарк"),
         Book(objectId = 6372, access = true, name = "1984", pages = 400, author = "Оруэл"),
         Book(objectId = 3876, access = true, name = "Война и мир", pages = 1472, author = "Толстой"),
-        Newspaper(objectId =  6341, access = true, name = "WSJ", releaseNumber = 120225, month = "январь"),
-        Newspaper(objectId =  6371, access = true, name = "Зеленоград.ru", releaseNumber = 121124, month = "март"),
-        Newspaper(objectId =  6383, access = true, name = "Спорт-Экпресс", releaseNumber = 230125, month = "октябрь"),
-        Newspaper(objectId =  6342, access = true, name = "WSJ", releaseNumber = 200225, month = "июнь"),
-        Newspaper(objectId =  6392, access = true, name = "Коммерсантъ", releaseNumber = 130325, month = "июль"),
-        Disk(objectId = 9234, access = true, name = "Назад в будущее", type = "DVD"),
-        Disk(objectId = 9245, access = true, name = "Довод", type = "CD"),
-        Disk(objectId = 9239, access = true, name = "Дивергент", type = "CD"),
-        Disk(objectId = 9296, access = true, name = "Рио", type = "DVD"),
-        Disk(objectId = 9212, access = true, name = "Люди в чёрном", type = "DVD")
+        Newspaper(objectId =  6341, access = true, name = "WSJ", releaseNumber = 120225, month = Month.January),
+        Newspaper(objectId =  6371, access = true, name = "Зеленоград.ru", releaseNumber = 121124, month = Month.March),
+        Newspaper(objectId =  6383, access = true, name = "Спорт-Экпресс", releaseNumber = 230125, month = Month.October),
+        Newspaper(objectId =  6342, access = true, name = "WSJ", releaseNumber = 200225, month = Month.June),
+        Newspaper(objectId =  6392, access = true, name = "Коммерсантъ", releaseNumber = 130325, month = Month.July),
+        Disk(objectId = 9234, access = true, name = "Назад в будущее", type = DiskType.DVD),
+        Disk(objectId = 9245, access = true, name = "Довод", type = DiskType.CD),
+        Disk(objectId = 9239, access = true, name = "Дивергент", type = DiskType.CD),
+        Disk(objectId = 9296, access = true, name = "Рио", type = DiskType.DVD),
+        Disk(objectId = 9212, access = true, name = "Люди в чёрном", type = DiskType.DVD)
     )
     private val booksList: List<Book> = returnList<Book>(list)
     private val newspapersList: List<Newspaper> = returnList<Newspaper>(list)
@@ -189,15 +189,15 @@ class Library {
             when (readlnOrNull()?.toIntOrNull()){
                 1 -> {
                     println("Менеджер купил следующий объект:")
-                    manager.buySomething(booksShop).longInformation()
+                    manager.buy(booksShop).longInformation()
                 }
                 2 -> {
                     println("Менеджер купил следующий объект:")
-                    manager.buySomething(disksShop).longInformation()
+                    manager.buy(disksShop).longInformation()
                 }
                 3 -> {
                     println("Менеджер купил следующий объект:")
-                    manager.buySomething(newspapersShop).longInformation()
+                    manager.buy(newspapersShop).longInformation()
                 }
                 4 -> break
                 else -> println("Неверный выбор, попробуйте ещё раз.")
