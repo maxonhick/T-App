@@ -1,4 +1,4 @@
-package com.t_bank_app.recycler
+package com.tBankApp.recycler
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -7,18 +7,18 @@ import android.widget.Toast.LENGTH_SHORT
 import android.widget.Toast.makeText
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.t_bank_app.R
-import com.t_bank_app.databinding.BookItemBinding
-import com.t_bank_app.databinding.DiskItemBinding
-import com.t_bank_app.databinding.NewspaperItemBinding
-import com.t_bank_app.library.Book
-import com.t_bank_app.library.Disk
-import com.t_bank_app.library.DiskType
-import com.t_bank_app.library.Month
-import com.t_bank_app.library.Newspaper
-import com.t_bank_app.recycler.view_holder.BookViewHolder
-import com.t_bank_app.recycler.view_holder.DiskViewHolder
-import com.t_bank_app.recycler.view_holder.NewspaperViewHolder
+import com.library.Book
+import com.library.Disk
+import com.library.DiskType
+import com.library.Month
+import com.library.Newspaper
+import com.library.R
+import com.library.databinding.BookItemBinding
+import com.library.databinding.DiskItemBinding
+import com.library.databinding.NewspaperItemBinding
+import com.tBankApp.recycler.view_holder.BookViewHolder
+import com.tBankApp.recycler.view_holder.DiskViewHolder
+import com.tBankApp.recycler.view_holder.NewspaperViewHolder
 
 class LibraryAdapter: RecyclerView.Adapter<ViewHolder>() {
     private val data = listOf(

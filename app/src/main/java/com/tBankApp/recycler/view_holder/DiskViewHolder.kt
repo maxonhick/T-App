@@ -1,10 +1,10 @@
-package com.t_bank_app.recycler.view_holder
+package com.tBankApp.recycler.view_holder
 
 import android.annotation.SuppressLint
 import androidx.recyclerview.widget.RecyclerView
-import com.t_bank_app.R
-import com.t_bank_app.databinding.DiskItemBinding
-import com.t_bank_app.library.Disk
+import com.library.Disk
+import com.library.R
+import com.library.databinding.DiskItemBinding
 
 class DiskViewHolder(private val binding: DiskItemBinding): RecyclerView.ViewHolder(binding.root) {
     @SuppressLint("SetTextI18n")

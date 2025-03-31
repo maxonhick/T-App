@@ -1,10 +1,10 @@
-package com.t_bank_app.recycler.view_holder
+package com.tBankApp.recycler.view_holder
 
 import android.annotation.SuppressLint
 import androidx.recyclerview.widget.RecyclerView
-import com.t_bank_app.R
-import com.t_bank_app.databinding.BookItemBinding
-import com.t_bank_app.library.Book
+import com.library.Book
+import com.library.R
+import com.library.databinding.BookItemBinding
 
 class BookViewHolder(private val binding: BookItemBinding): RecyclerView.ViewHolder(binding.root) {
     @SuppressLint("SetTextI18n")
