@@ -3,7 +3,8 @@ package com.library
 abstract class LibraryObjects(
     val objectId: Int,
     var access: Boolean,
-    val name: String
+    val name: String,
+    val objectType: TypeLibraryObjects
 ): Returnable{
     fun smallInformation(){
         if (access){

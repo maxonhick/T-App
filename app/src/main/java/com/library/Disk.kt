@@ -4,8 +4,9 @@ class Disk(
     objectId: Int,
     access: Boolean,
     name: String,
-    val type: DiskType
-): LibraryObjects(objectId, access, name), Homeable {
+    val type: DiskType,
+    objectType: TypeLibraryObjects
+): LibraryObjects(objectId, access, name, objectType), Homeable {
     override fun longInformation() {
         val possible = if (access) "Да" else "Нет"
         println("$type $name доступен: $possible")

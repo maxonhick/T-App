@@ -5,8 +5,9 @@ class Newspaper(
     access: Boolean,
     name: String,
     val releaseNumber: Int,
-    val month: Month
-): LibraryObjects(objectId, access, name), Readable {
+    val month: Month,
+    objectType: TypeLibraryObjects
+): LibraryObjects(objectId, access, name, objectType), Readable {
     override fun longInformation() {
         val possible = if (access) "Да" else "Нет"
         println("Газета выпуск: $releaseNumber от месяца: $month газеты $name c id: $objectId доступен: $possible")
