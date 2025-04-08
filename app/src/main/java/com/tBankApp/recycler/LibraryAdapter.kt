@@ -8,17 +8,13 @@ import com.library.Disk
 import com.library.LibraryObjects
 import com.library.Newspaper
 import com.library.R
-import com.library.activity.LibraryViewModel
-import com.library.activity.MainActivity
-import com.library.activity.ObjectActivity
 import com.library.databinding.LibraryItemBinding
 import com.tBankApp.recycler.view_holder.LibraryItemViewHolder
 
 class LibraryAdapter (private val onItemClick: (LibraryObjects) -> Unit): ListAdapter<LibraryObjects, LibraryItemViewHolder>(LibraryItemsDiffUtil()) {
-    private var data = LibraryViewModel().items.value
 
     override fun getItemViewType(position: Int): Int {
-        val item = data?.get(position)
+        val item = currentList[position]
         return when(item) {
             is Book, is Newspaper, is Disk -> R.layout.library_item
             else -> throw IllegalArgumentException("Unknown element: $item")
@@ -31,7 +27,7 @@ class LibraryAdapter (private val onItemClick: (LibraryObjects) -> Unit): ListAd
     }
 
     override fun onBindViewHolder(holder: LibraryItemViewHolder, position: Int) {
-        val item = data?.get(position)
+        val item = getItem(position)
         item?.let {
             holder.bind(it)
             holder.itemView.setOnClickListener {
@@ -40,18 +36,5 @@ class LibraryAdapter (private val onItemClick: (LibraryObjects) -> Unit): ListAd
         }
     }
 
-    override fun getItemCount(): Int = data?.size ?: 0
-
-//    fun updateItems(newItem: LibraryObjects) {
-//        LibraryViewModel().addItem(newItem)
-//    }
-
-//    private fun handlePersonClick(context: Context, position: Int) {
-//        if (position != RecyclerView.NO_POSITION) {
-//            val item = data[position]
-//            makeText(context, "Элемент с id ${item.objectId}", LENGTH_SHORT).show()
-//            item. = !(item.access)
-//            notifyItemChanged(position)
-//        }
-//    }
+    override fun getItemCount(): Int = currentList.size
 }

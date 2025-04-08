@@ -1,13 +1,14 @@
 package com.library.activity
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import androidx.lifecycle.ViewModel
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ComponentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.library.Book
 import com.library.Disk
@@ -19,91 +20,93 @@ import com.library.R
 import com.library.TypeLibraryObjects
 import com.library.databinding.ObjectActivityBinding
 
-class ObjectActivity : Activity() {
+class ObjectActivity : AppCompatActivity() {
     private lateinit var binding: ObjectActivityBinding
-    private lateinit var currentItem: LibraryObjects
-    private var isItemNew: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ObjectActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        isItemNew = intent.getBooleanExtra(IS_NEW, false)
-        val itemId = intent.getIntExtra(ITEM_ID, -1)
+        val isItemNew = intent.getBooleanExtra(IS_NEW, false)
         val type = intent.getStringExtra(TYPE_OBJECT)
 
         if (isItemNew) {
-            when (type) {
-                "Book" -> currentItem = Book(0, false, "", TypeLibraryObjects.Book, 0, "")
-                "Disk" -> currentItem = Disk(0, false, "", DiskType.CD, TypeLibraryObjects.Disk)
-                "Newspaper" -> currentItem = Newspaper(0, false,"", 0, Month.January, TypeLibraryObjects.Newspaper)
-                else -> finish()
-            }
-            setupForEditing(currentItem)
+            setupForEditing(type!!)
         } else {
-            currentItem = try {
-                LibraryViewModel().getItemById(itemId)
-            } catch (e: Exception){
-                finish()
-                return
-            }
-            setupForViewing()
+            setupForViewing(type!!)
         }
 
         binding.saveButton.setOnClickListener {
             val resultIntent: Intent
             if (isItemNew) {
-                when (currentItem.objectType) {
-                    TypeLibraryObjects.Book -> {
+                when (type) {
+                    "Book" -> {
                         val newName = binding.editName.text.toString()
                         val newAuthor = binding.editAuthor.text.toString()
                         val newPages = Integer.parseInt(binding.editPages.text.toString())
                         val newId = Integer.parseInt(binding.editId.text.toString())
-                        LibraryViewModel().addNewItem(listOf(Book(newId, true, newName, TypeLibraryObjects.Book, newPages, newAuthor)))
                         resultIntent = Intent().apply {
+                            putExtra(TYPE_OBJECT, "Book")
                             putExtra(ITEM_ID, newId)
                             putExtra(IS_NEW, true)
+                            putExtra(NAME, newName)
+                            putExtra(ACCESS, true)
+                            putExtra(AUTHOR, newAuthor)
+                            putExtra(PAGES, newPages)
                         }
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
                     }
-                    TypeLibraryObjects.Disk -> {
+                    "Disk" -> {
                         val newName = binding.editName.text.toString()
                         val newId = Integer.parseInt(binding.editId.text.toString())
                         val newTypeOfDisk = when (binding.diskTypeSpinner.selectedItemPosition) {
-                            0 -> DiskType.CD
-                            1 -> DiskType.DVD
-                            else -> DiskType.CD
+                            0 -> "CD"
+                            1 -> "DVD"
+                            else -> "CD"
                         }
-                        LibraryViewModel().addNewItem(listOf(Disk(newId, true, newName, newTypeOfDisk, TypeLibraryObjects.Disk)))
                         resultIntent = Intent().apply {
+                            putExtra(TYPE_OBJECT, "Disk")
                             putExtra(ITEM_ID, newId)
                             putExtra(IS_NEW, true)
+                            putExtra(NAME, newName)
+                            putExtra(ACCESS, true)
+                            putExtra(DISK_TYPE, newTypeOfDisk)
                         }
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
                     }
-                    TypeLibraryObjects.Newspaper -> {
+                    "Newspaper" -> {
                         val newName = binding.editName.text.toString()
                         val newReleaseNumber = Integer.parseInt(binding.editReleaseNumber.text.toString())
                         val newId = Integer.parseInt(binding.editId.text.toString())
                         val newMonth = when (binding.monthNewspaper.selectedItemPosition) {
-                            0 -> Month.January
-                            1 -> Month.February
-                            2 -> Month.March
-                            3 -> Month.April
-                            4 -> Month.May
-                            5 -> Month.June
-                            6 -> Month.July
-                            7 -> Month.August
-                            8 -> Month.September
-                            9 -> Month.October
-                            10 -> Month.November
-                            11 -> Month.December
-                            else -> Month.January
+                            0 -> "January"
+                            1 -> "February"
+                            2 -> "March"
+                            3 -> "April"
+                            4 -> "May"
+                            5 -> "June"
+                            6 -> "July"
+                            7 -> "August"
+                            8 -> "September"
+                            9 -> "October"
+                            10 -> "November"
+                            11 -> "December"
+                            else -> "January"
                         }
-                        LibraryViewModel().addNewItem(listOf(Newspaper(newId, true, newName, newReleaseNumber, newMonth, TypeLibraryObjects.Newspaper)))
                         resultIntent = Intent().apply {
+                            putExtra(TYPE_OBJECT, "Newspaper")
                             putExtra(ITEM_ID, newId)
                             putExtra(IS_NEW, true)
+                            putExtra(NAME, newName)
+                            putExtra(ACCESS, true)
+                            putExtra(RELEASE, newReleaseNumber)
+                            putExtra(MONTH, newMonth)
                         }
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
                     }
                 }
             } else {
@@ -111,20 +114,19 @@ class ObjectActivity : Activity() {
                     putExtra(ITEM_ID, -1)
                     putExtra(IS_NEW, false)
                 }
+                setResult(RESULT_OK, resultIntent)
+                finish()
             }
-
-            setResult(RESULT_OK, resultIntent)
-            finish()
         }
     }
 
-    private fun setupForEditing(item: LibraryObjects) {
+    private fun setupForEditing(itemType: String) {
         binding.saveButton.text = "Сохранить"
-        when (item.objectType) {
-            TypeLibraryObjects.Book -> {
+        when (itemType) {
+            "Book" -> {
                 binding.typeLibraryObject.text = "Книга"
                 binding.editName.isEnabled = true
-                binding.editId.text = ((LibraryViewModel().items.value?.size ?: 0) + 1).toString()
+                binding.editId.text = intent.getIntExtra(ITEM_ID, 1).toString()
                 binding.editAuthor.visibility = View.VISIBLE
                 binding.editAuthor.isEnabled = true
                 binding.author.visibility = View.VISIBLE
@@ -139,10 +141,10 @@ class ObjectActivity : Activity() {
                 binding.diskType.visibility = View.GONE
                 binding.diskTypeSpinner.visibility = View.GONE
             }
-            TypeLibraryObjects.Disk -> {
+            "Disk" -> {
                 binding.typeLibraryObject.text = "Диск"
                 binding.editName.isEnabled = true
-                binding.editId.text = ((LibraryViewModel().items.value?.size ?: 0) + 1).toString()
+                binding.editId.text = intent.getIntExtra(ITEM_ID, 1).toString()
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
                 binding.valAccess.text = "Доступен"
@@ -165,10 +167,10 @@ class ObjectActivity : Activity() {
                     spinner.adapter = adapter
                 }
             }
-            TypeLibraryObjects.Newspaper -> {
+            "Newspaper" -> {
                 binding.typeLibraryObject.text = "Газета"
                 binding.editName.isEnabled = true
-                binding.editId.text = ((LibraryViewModel().items.value?.size ?: 0) + 1).toString()
+                binding.editId.text = intent.getIntExtra(ITEM_ID, 1).toString()
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
                 binding.valAccess.text = "Доступна"
@@ -194,42 +196,38 @@ class ObjectActivity : Activity() {
         }
     }
 
-//    private fun loadItem(itemId: Int): LibraryObjects {
-//        return LibraryViewModel().getItemById(itemId) ?: throw IllegalArgumentException("Нет такого ID")
-//    }
-
-    private fun setupForViewing() {
+    private fun setupForViewing(type: String) {
         binding.saveButton.text = "Назад"
-        when (currentItem.objectType) {
-            TypeLibraryObjects.Book -> {
+        when (type) {
+            "Book" -> {
                 binding.typeLibraryObject.text = "Книга"
                 binding.editName.isEnabled = false
-                binding.editName.setText(currentItem.name)
-                binding.editId.setText(currentItem.objectId.toString())
+                binding.editName.setText(intent.getStringExtra(NAME))
+                binding.editId.setText(intent.getIntExtra(ITEM_ID, 1).toString())
                 binding.editAuthor.visibility = View.VISIBLE
                 binding.editAuthor.isEnabled = false
-                binding.editAuthor.setText((currentItem as Book).author)
+                binding.editAuthor.setText(intent.getStringExtra(AUTHOR))
                 binding.author.visibility = View.VISIBLE
-                binding.valAccess.text = currentItem.access.toString()
+                binding.valAccess.text = intent.getBooleanExtra(ACCESS, true).toString()
                 binding.month.visibility = View.GONE
                 binding.monthNewspaper.visibility = View.GONE
                 binding.pages.visibility = View.VISIBLE
                 binding.editPages.visibility = View.VISIBLE
                 binding.editPages.isEnabled = false
-                binding.editPages.setText((currentItem as Book).pages.toString())
+                binding.editPages.setText(intent.getIntExtra(PAGES, 0).toString())
                 binding.releaseNumber.visibility = View.GONE
                 binding.editReleaseNumber.visibility = View.GONE
                 binding.diskType.visibility = View.GONE
                 binding.diskTypeSpinner.visibility = View.GONE
             }
-            TypeLibraryObjects.Disk -> {
+            "Disk" -> {
                 binding.typeLibraryObject.text = "Диск"
                 binding.editName.isEnabled = false
-                binding.editName.setText(currentItem.name)
-                binding.editId.setText(currentItem.objectId.toString())
+                binding.editName.setText(intent.getStringExtra(NAME))
+                binding.editId.setText(intent.getIntExtra(ITEM_ID, 1).toString())
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
-                binding.valAccess.text = currentItem.access.toString()
+                binding.valAccess.text = intent.getBooleanExtra(ACCESS, true).toString()
                 binding.month.visibility = View.GONE
                 binding.monthNewspaper.visibility = View.GONE
                 binding.pages.visibility = View.GONE
@@ -239,42 +237,44 @@ class ObjectActivity : Activity() {
                 binding.diskType.visibility = View.VISIBLE
                 binding.diskTypeSpinner.visibility = View.VISIBLE
                 binding.diskTypeSpinner.isEnabled = false
-                binding.diskTypeSpinner.setSelection(when ((currentItem as Disk).type){
-                    DiskType.DVD -> 1
-                    DiskType.CD -> 0
+                binding.diskTypeSpinner.setSelection(when (intent.getStringExtra(DISK_TYPE)){
+                    "DVD" -> 1
+                    "CD" -> 0
+                    else -> 1
                 })
             }
-            TypeLibraryObjects.Newspaper -> {
+            "Newspaper" -> {
                 binding.typeLibraryObject.text = "Газета"
                 binding.editName.isEnabled = false
-                binding.editName.setText(currentItem.name)
-                binding.editId.setText(currentItem.objectId.toString())
+                binding.editName.setText(intent.getStringExtra(NAME))
+                binding.editId.setText(intent.getIntExtra(ITEM_ID, 1).toString())
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
-                binding.valAccess.text = currentItem.access.toString()
+                binding.valAccess.text = intent.getBooleanExtra(ACCESS, true).toString()
                 binding.month.visibility = View.VISIBLE
                 binding.monthNewspaper.visibility = View.VISIBLE
                 binding.diskTypeSpinner.isEnabled = false
-                binding.diskTypeSpinner.setSelection(when ((currentItem as Newspaper).month){
-                    Month.January -> 0
-                    Month.February -> 1
-                    Month.March -> 2
-                    Month.April -> 3
-                    Month.May -> 4
-                    Month.June -> 5
-                    Month.July -> 6
-                    Month.August -> 7
-                    Month.September -> 8
-                    Month.October -> 9
-                    Month.November -> 10
-                    Month.December -> 11
+                binding.diskTypeSpinner.setSelection(when (intent.getStringExtra(MONTH)){
+                    "January" -> 0
+                    "February" -> 1
+                    "March" -> 2
+                    "April" -> 3
+                    "May" -> 4
+                    "June" -> 5
+                    "July" -> 6
+                    "August" -> 7
+                    "September" -> 8
+                    "October" -> 9
+                    "November" -> 10
+                    "December" -> 11
+                    else -> 0
                 })
                 binding.pages.visibility = View.GONE
                 binding.editPages.visibility = View.GONE
                 binding.releaseNumber.visibility = View.VISIBLE
                 binding.editReleaseNumber.visibility = View.VISIBLE
                 binding.editReleaseNumber.isEnabled = false
-                binding.editReleaseNumber.setText((currentItem as Newspaper).releaseNumber.toString())
+                binding.editReleaseNumber.setText(intent.getIntExtra(RELEASE, 0).toString())
                 binding.diskType.visibility = View.GONE
                 binding.diskTypeSpinner.visibility = View.GONE
             }
@@ -285,18 +285,12 @@ class ObjectActivity : Activity() {
         const val ITEM_ID = "ITEM_ID"
         const val IS_NEW = "IS_NEW"
         const val TYPE_OBJECT = "TYPEOBJECT"
-
-        fun createIntent(
-            context: Context,
-            itemId: Int? = null,
-            isNew: Boolean = false,
-            type: TypeLibraryObjects? = null
-        ): Intent {
-            return Intent(context, ObjectActivity::class.java).apply {
-                putExtra(ITEM_ID, itemId ?: -1)
-                putExtra(IS_NEW, isNew)
-                type?.let { putExtra(TYPE_OBJECT, it.toString()) }
-            }
-        }
+        const val ACCESS = "ACCESS"
+        const val NAME = "NAME"
+        const val PAGES = "PAGES"
+        const val AUTHOR = "AUTHOR"
+        const val DISK_TYPE = "DISK_TYPE"
+        const val  RELEASE = "RELEASE"
+        const val MONTH = "MONTH"
     }
 }
