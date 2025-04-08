@@ -1,23 +1,12 @@
 package com.library.activity
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ComponentActivity
-import androidx.lifecycle.ViewModelProvider
-import com.library.Book
-import com.library.Disk
-import com.library.DiskType
-import com.library.LibraryObjects
-import com.library.Month
-import com.library.Newspaper
 import com.library.R
-import com.library.TypeLibraryObjects
 import com.library.databinding.ObjectActivityBinding
 
 class ObjectActivity : AppCompatActivity() {

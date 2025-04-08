@@ -15,10 +15,5 @@ class LibraryViewModel : ViewModel(){
         _items.value = currentList.distinctBy { it.objectId }
     }
 
-
-    fun getItemById(id: Int) : LibraryObjects {
-        return _items.value?.find { it.objectId == id } ?: throw IllegalArgumentException("Неверный id")
-    }
-
     fun getSize(): Int = _items.value?.size ?: 0
 }
