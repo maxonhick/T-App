@@ -12,20 +12,36 @@ inline fun <reified T: LibraryObjects> returnList(list: List<LibraryObjects>): L
 
 class Library {
     private val list = listOf(
-        Book(objectId = 1289, access = true, name = "Маугли", pages = 100, author = "Киплинг"),
-        Book(objectId = 3609, access = true, name = "Чёрный обелиск", pages = 479, author = "Ремарк"),
-        Book(objectId = 6372, access = true, name = "1984", pages = 400, author = "Оруэл"),
-        Book(objectId = 3876, access = true, name = "Война и мир", pages = 1472, author = "Толстой"),
-        Newspaper(objectId =  6341, access = true, name = "WSJ", releaseNumber = 120225, month = Month.January),
-        Newspaper(objectId =  6371, access = true, name = "Зеленоград.ru", releaseNumber = 121124, month = Month.March),
-        Newspaper(objectId =  6383, access = true, name = "Спорт-Экпресс", releaseNumber = 230125, month = Month.October),
-        Newspaper(objectId =  6342, access = true, name = "WSJ", releaseNumber = 200225, month = Month.June),
-        Newspaper(objectId =  6392, access = true, name = "Коммерсантъ", releaseNumber = 130325, month = Month.July),
-        Disk(objectId = 9234, access = true, name = "Назад в будущее", type = DiskType.DVD),
-        Disk(objectId = 9245, access = true, name = "Довод", type = DiskType.CD),
-        Disk(objectId = 9239, access = true, name = "Дивергент", type = DiskType.CD),
-        Disk(objectId = 9296, access = true, name = "Рио", type = DiskType.DVD),
-        Disk(objectId = 9212, access = true, name = "Люди в чёрном", type = DiskType.DVD)
+        Book(
+            objectId = 1289, access = true, name = "Маугли", pages = 100, author = "Киплинг",
+            objectType = TypeLibraryObjects.Book
+        ),
+        Book(objectId = 3609, access = true, name = "Чёрный обелиск", pages = 479, author = "Ремарк",
+            objectType = TypeLibraryObjects.Book),
+        Book(objectId = 6372, access = true, name = "1984", pages = 400, author = "Оруэл",
+            objectType = TypeLibraryObjects.Book),
+        Book(objectId = 3876, access = true, name = "Война и мир", pages = 1472, author = "Толстой",
+            objectType = TypeLibraryObjects.Book),
+        Newspaper(objectId =  6341, access = true, name = "WSJ", releaseNumber = 120225, month = Month.January,
+            objectType = TypeLibraryObjects.Newspaper),
+        Newspaper(objectId =  6371, access = true, name = "Зеленоград.ru", releaseNumber = 121124, month = Month.March,
+            objectType = TypeLibraryObjects.Newspaper),
+        Newspaper(objectId =  6383, access = true, name = "Спорт-Экпресс", releaseNumber = 230125, month = Month.October,
+            objectType = TypeLibraryObjects.Newspaper),
+        Newspaper(objectId =  6342, access = true, name = "WSJ", releaseNumber = 200225, month = Month.June,
+            objectType = TypeLibraryObjects.Newspaper),
+        Newspaper(objectId =  6392, access = true, name = "Коммерсантъ", releaseNumber = 130325, month = Month.July,
+            objectType = TypeLibraryObjects.Newspaper),
+        Disk(objectId = 9234, access = true, name = "Назад в будущее", type = DiskType.DVD,
+            objectType = TypeLibraryObjects.Disk),
+        Disk(objectId = 9245, access = true, name = "Довод", type = DiskType.CD,
+            objectType = TypeLibraryObjects.Disk),
+        Disk(objectId = 9239, access = true, name = "Дивергент", type = DiskType.CD,
+            objectType = TypeLibraryObjects.Disk),
+        Disk(objectId = 9296, access = true, name = "Рио", type = DiskType.DVD,
+            objectType = TypeLibraryObjects.Disk),
+        Disk(objectId = 9212, access = true, name = "Люди в чёрном", type = DiskType.DVD,
+            objectType = TypeLibraryObjects.Disk)
     )
     private val booksList: List<Book> = returnList<Book>(list)
     private val newspapersList: List<Newspaper> = returnList<Newspaper>(list)

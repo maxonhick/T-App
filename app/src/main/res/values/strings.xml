@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Library</string>
+    <string name="add_book">Добавить книгу</string>
+    <string name="add_disk">Добавить диск</string>
+    <string name="add_newspaper">Добавить газету</string>
+    <string name="newspaper">Газета</string>
+    <string name="book">Книга</string>
+    <string name="disk">Диск</string>
+    <string name="object_type">Тип объекта:</string>
+    <string name="save">Сохранить</string>
 </resources>

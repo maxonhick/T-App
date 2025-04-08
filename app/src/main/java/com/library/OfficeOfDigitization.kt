@@ -7,7 +7,8 @@ class OfficeOfDigitization<in T: LibraryObjects> {
                 objectId = libraryObject.objectId,
                 access = true,
                 name = libraryObject.name,
-                type = DiskType.CD
+                type = DiskType.CD,
+                objectType = TypeLibraryObjects.Disk
             )
             return disk
         } else {

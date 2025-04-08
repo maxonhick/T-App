@@ -4,9 +4,10 @@ class Book(
     objectId: Int,
     access: Boolean,
     name: String,
+    objectType: TypeLibraryObjects,
     val pages: Int,
     val author: String
-): LibraryObjects(objectId, access, name), Homeable, Readable {
+): LibraryObjects(objectId, access, name, objectType), Homeable, Readable {
     override fun longInformation() {
         val possible = if (access) "Да" else "Нет"
         println("книга: $name ($pages стр.) автора: $author с id: $objectId доступна: $possible")
