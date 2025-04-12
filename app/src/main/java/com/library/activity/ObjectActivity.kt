@@ -1,12 +1,20 @@
 package com.library.activity
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import com.library.Book
+import com.library.Disk
+import com.library.DiskType
+import com.library.LibraryObjects
+import com.library.Month
+import com.library.Newspaper
 import com.library.R
+import com.library.TypeLibraryObjects
 import com.library.databinding.ObjectActivityBinding
 
 class ObjectActivity : AppCompatActivity() {
@@ -36,13 +44,16 @@ class ObjectActivity : AppCompatActivity() {
                         val newPages = Integer.parseInt(binding.editPages.text.toString())
                         val newId = Integer.parseInt(binding.editId.text.toString())
                         resultIntent = Intent().apply {
-                            putExtra(TYPE_OBJECT, "Book")
-                            putExtra(ITEM_ID, newId)
                             putExtra(IS_NEW, true)
-                            putExtra(NAME, newName)
-                            putExtra(ACCESS, true)
-                            putExtra(AUTHOR, newAuthor)
-                            putExtra(PAGES, newPages)
+                            putExtra(TYPE_OBJECT, TypeLibraryObjects.Book.name)
+                            putExtra(BOOK_EXTRA, Book(
+                                newId,
+                                true,
+                                newName,
+                                TypeLibraryObjects.Book,
+                                newPages,
+                                newAuthor
+                            ))
                         }
                         setResult(RESULT_OK, resultIntent)
                         finish()
@@ -51,17 +62,20 @@ class ObjectActivity : AppCompatActivity() {
                         val newName = binding.editName.text.toString()
                         val newId = Integer.parseInt(binding.editId.text.toString())
                         val newTypeOfDisk = when (binding.diskTypeSpinner.selectedItemPosition) {
-                            0 -> "CD"
-                            1 -> "DVD"
-                            else -> "CD"
+                            0 -> DiskType.CD
+                            1 -> DiskType.DVD
+                            else -> DiskType.CD
                         }
                         resultIntent = Intent().apply {
-                            putExtra(TYPE_OBJECT, "Disk")
-                            putExtra(ITEM_ID, newId)
                             putExtra(IS_NEW, true)
-                            putExtra(NAME, newName)
-                            putExtra(ACCESS, true)
-                            putExtra(DISK_TYPE, newTypeOfDisk)
+                            putExtra(TYPE_OBJECT, TypeLibraryObjects.Disk.name)
+                            putExtra(DISK_EXTRA, Disk(
+                                objectId = newId,
+                                access = true,
+                                name = newName,
+                                type =  newTypeOfDisk,
+                                objectType = TypeLibraryObjects.Disk
+                            ))
                         }
                         setResult(RESULT_OK, resultIntent)
                         finish()
@@ -71,28 +85,31 @@ class ObjectActivity : AppCompatActivity() {
                         val newReleaseNumber = Integer.parseInt(binding.editReleaseNumber.text.toString())
                         val newId = Integer.parseInt(binding.editId.text.toString())
                         val newMonth = when (binding.monthNewspaper.selectedItemPosition) {
-                            0 -> "January"
-                            1 -> "February"
-                            2 -> "March"
-                            3 -> "April"
-                            4 -> "May"
-                            5 -> "June"
-                            6 -> "July"
-                            7 -> "August"
-                            8 -> "September"
-                            9 -> "October"
-                            10 -> "November"
-                            11 -> "December"
-                            else -> "January"
+                            0 -> Month.January
+                            1 -> Month.February
+                            2 -> Month.March
+                            3 -> Month.April
+                            4 -> Month.May
+                            5 -> Month.June
+                            6 -> Month.July
+                            7 -> Month.August
+                            8 -> Month.September
+                            9 -> Month.October
+                            10 -> Month.November
+                            11 -> Month.December
+                            else -> Month.January
                         }
                         resultIntent = Intent().apply {
-                            putExtra(TYPE_OBJECT, "Newspaper")
-                            putExtra(ITEM_ID, newId)
                             putExtra(IS_NEW, true)
-                            putExtra(NAME, newName)
-                            putExtra(ACCESS, true)
-                            putExtra(RELEASE, newReleaseNumber)
-                            putExtra(MONTH, newMonth)
+                            putExtra(TYPE_OBJECT, TypeLibraryObjects.Newspaper.name)
+                            putExtra(NEWSPAPER_EXTRA, Newspaper(
+                                objectId = newId,
+                                access = true,
+                                name = newName,
+                                releaseNumber = newReleaseNumber,
+                                month = newMonth,
+                                objectType = TypeLibraryObjects.Newspaper
+                            ))
                         }
                         setResult(RESULT_OK, resultIntent)
                         finish()
@@ -100,7 +117,6 @@ class ObjectActivity : AppCompatActivity() {
                 }
             } else {
                 resultIntent = Intent().apply {
-                    putExtra(ITEM_ID, -1)
                     putExtra(IS_NEW, false)
                 }
                 setResult(RESULT_OK, resultIntent)
@@ -113,9 +129,10 @@ class ObjectActivity : AppCompatActivity() {
         binding.saveButton.text = "Сохранить"
         when (itemType) {
             "Book" -> {
+                val item = intent.getParcelableExtra<Book>(BOOK_EXTRA)
                 binding.typeLibraryObject.text = "Книга"
                 binding.editName.isEnabled = true
-                binding.editId.text = intent.getIntExtra(ITEM_ID, 1).toString()
+                binding.editId.text = item?.objectId.toString()
                 binding.editAuthor.visibility = View.VISIBLE
                 binding.editAuthor.isEnabled = true
                 binding.author.visibility = View.VISIBLE
@@ -131,9 +148,10 @@ class ObjectActivity : AppCompatActivity() {
                 binding.diskTypeSpinner.visibility = View.GONE
             }
             "Disk" -> {
+                val item = intent.getParcelableExtra<Disk>(DISK_EXTRA)
                 binding.typeLibraryObject.text = "Диск"
                 binding.editName.isEnabled = true
-                binding.editId.text = intent.getIntExtra(ITEM_ID, 1).toString()
+                binding.editId.text = item?.objectId.toString()
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
                 binding.valAccess.text = "Доступен"
@@ -157,9 +175,10 @@ class ObjectActivity : AppCompatActivity() {
                 }
             }
             "Newspaper" -> {
+                val item = intent.getParcelableExtra<Newspaper>(NEWSPAPER_EXTRA)
                 binding.typeLibraryObject.text = "Газета"
                 binding.editName.isEnabled = true
-                binding.editId.text = intent.getIntExtra(ITEM_ID, 1).toString()
+                binding.editId.text = item?.objectId.toString()
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
                 binding.valAccess.text = "Доступна"
@@ -189,34 +208,36 @@ class ObjectActivity : AppCompatActivity() {
         binding.saveButton.text = "Назад"
         when (type) {
             "Book" -> {
+                val item = intent.getParcelableExtra<Book>(BOOK_EXTRA)
                 binding.typeLibraryObject.text = "Книга"
                 binding.editName.isEnabled = false
-                binding.editName.setText(intent.getStringExtra(NAME))
-                binding.editId.setText(intent.getIntExtra(ITEM_ID, 1).toString())
+                binding.editName.setText(item?.name)
+                binding.editId.setText(item?.objectId.toString())
                 binding.editAuthor.visibility = View.VISIBLE
                 binding.editAuthor.isEnabled = false
-                binding.editAuthor.setText(intent.getStringExtra(AUTHOR))
+                binding.editAuthor.setText(item?.author)
                 binding.author.visibility = View.VISIBLE
-                binding.valAccess.text = intent.getBooleanExtra(ACCESS, true).toString()
+                binding.valAccess.text = item?.access.toString()
                 binding.month.visibility = View.GONE
                 binding.monthNewspaper.visibility = View.GONE
                 binding.pages.visibility = View.VISIBLE
                 binding.editPages.visibility = View.VISIBLE
                 binding.editPages.isEnabled = false
-                binding.editPages.setText(intent.getIntExtra(PAGES, 0).toString())
+                binding.editPages.setText(item?.pages.toString())
                 binding.releaseNumber.visibility = View.GONE
                 binding.editReleaseNumber.visibility = View.GONE
                 binding.diskType.visibility = View.GONE
                 binding.diskTypeSpinner.visibility = View.GONE
             }
             "Disk" -> {
+                val item = intent.getParcelableExtra<Disk>(DISK_EXTRA)
                 binding.typeLibraryObject.text = "Диск"
                 binding.editName.isEnabled = false
-                binding.editName.setText(intent.getStringExtra(NAME))
-                binding.editId.setText(intent.getIntExtra(ITEM_ID, 1).toString())
+                binding.editName.setText(item?.name)
+                binding.editId.setText(item?.objectId.toString())
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
-                binding.valAccess.text = intent.getBooleanExtra(ACCESS, true).toString()
+                binding.valAccess.text = item?.access.toString()
                 binding.month.visibility = View.GONE
                 binding.monthNewspaper.visibility = View.GONE
                 binding.pages.visibility = View.GONE
@@ -226,36 +247,37 @@ class ObjectActivity : AppCompatActivity() {
                 binding.diskType.visibility = View.VISIBLE
                 binding.diskTypeSpinner.visibility = View.VISIBLE
                 binding.diskTypeSpinner.isEnabled = false
-                binding.diskTypeSpinner.setSelection(when (intent.getStringExtra(DISK_TYPE)){
-                    "DVD" -> 1
-                    "CD" -> 0
+                binding.diskTypeSpinner.setSelection(when (item?.type){
+                    DiskType.DVD -> 1
+                    DiskType.CD -> 0
                     else -> 1
                 })
             }
             "Newspaper" -> {
+                val item = intent.getParcelableExtra<Newspaper>(NEWSPAPER_EXTRA)
                 binding.typeLibraryObject.text = "Газета"
                 binding.editName.isEnabled = false
-                binding.editName.setText(intent.getStringExtra(NAME))
-                binding.editId.setText(intent.getIntExtra(ITEM_ID, 1).toString())
+                binding.editName.setText(item?.name)
+                binding.editId.setText(item?.objectId.toString())
                 binding.editAuthor.visibility = View.GONE
                 binding.author.visibility = View.GONE
-                binding.valAccess.text = intent.getBooleanExtra(ACCESS, true).toString()
+                binding.valAccess.text = item?.access.toString()
                 binding.month.visibility = View.VISIBLE
                 binding.monthNewspaper.visibility = View.VISIBLE
                 binding.diskTypeSpinner.isEnabled = false
-                binding.diskTypeSpinner.setSelection(when (intent.getStringExtra(MONTH)){
-                    "January" -> 0
-                    "February" -> 1
-                    "March" -> 2
-                    "April" -> 3
-                    "May" -> 4
-                    "June" -> 5
-                    "July" -> 6
-                    "August" -> 7
-                    "September" -> 8
-                    "October" -> 9
-                    "November" -> 10
-                    "December" -> 11
+                binding.diskTypeSpinner.setSelection(when (item?.month){
+                    Month.January-> 0
+                    Month.February -> 1
+                    Month.March -> 2
+                    Month.April -> 3
+                    Month.May -> 4
+                    Month.June -> 5
+                    Month.July -> 6
+                    Month.August -> 7
+                    Month.September -> 8
+                    Month.October -> 9
+                    Month.November -> 10
+                    Month.December -> 11
                     else -> 0
                 })
                 binding.pages.visibility = View.GONE
@@ -263,7 +285,7 @@ class ObjectActivity : AppCompatActivity() {
                 binding.releaseNumber.visibility = View.VISIBLE
                 binding.editReleaseNumber.visibility = View.VISIBLE
                 binding.editReleaseNumber.isEnabled = false
-                binding.editReleaseNumber.setText(intent.getIntExtra(RELEASE, 0).toString())
+                binding.editReleaseNumber.setText(item?.releaseNumber.toString())
                 binding.diskType.visibility = View.GONE
                 binding.diskTypeSpinner.visibility = View.GONE
             }
@@ -271,15 +293,26 @@ class ObjectActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val ITEM_ID = "ITEM_ID"
         const val IS_NEW = "IS_NEW"
         const val TYPE_OBJECT = "TYPEOBJECT"
-        const val ACCESS = "ACCESS"
-        const val NAME = "NAME"
-        const val PAGES = "PAGES"
-        const val AUTHOR = "AUTHOR"
-        const val DISK_TYPE = "DISK_TYPE"
-        const val  RELEASE = "RELEASE"
-        const val MONTH = "MONTH"
+        const val BOOK_EXTRA = "BOOK_EXTRA"
+        const val DISK_EXTRA = "DISK_EXTRA"
+        const val NEWSPAPER_EXTRA = "NEWSPAPER_EXTRA"
+
+        fun createIntent(
+            context: Context,
+            isNew: Boolean = false,
+            item: LibraryObjects
+        ): Intent {
+            return Intent(context, ObjectActivity::class.java).apply {
+                putExtra(IS_NEW, isNew)
+                putExtra(TYPE_OBJECT, item.objectType.name)
+                when (item.objectType) {
+                    TypeLibraryObjects.Book -> putExtra(BOOK_EXTRA, item as Book)
+                    TypeLibraryObjects.Disk -> putExtra(DISK_EXTRA, item as Disk)
+                    TypeLibraryObjects.Newspaper -> putExtra(NEWSPAPER_EXTRA, item as Newspaper)
+                }
+            }
+        }
     }
 }
