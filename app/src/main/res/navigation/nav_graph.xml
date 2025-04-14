@@ -1,0 +1,28 @@
+<!-- nav_graph.xml -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/listFragment">
+
+    <fragment
+        android:id="@+id/listFragment"
+        android:name="com.library.activity.ListFragment"
+        android:label="Library Items">
+        <action
+            android:id="@+id/action_list_to_detail"
+            app:destination="@id/detailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/detailFragment"
+        android:name="com.library.activity.DetailFragment"
+        android:label="Item Details">
+        <argument
+            android:name="IS_NEW"
+            app:argType="boolean" />
+        <argument
+            android:name="ITEM"
+            app:argType="com.library.LibraryObjects" />
+    </fragment>
+</navigation>

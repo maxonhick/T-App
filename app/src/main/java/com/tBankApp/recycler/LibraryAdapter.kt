@@ -35,6 +35,4 @@ class LibraryAdapter (private val onItemClick: (LibraryObjects) -> Unit): ListAd
             }
         }
     }
-
-    override fun getItemCount(): Int = currentList.size
 }
