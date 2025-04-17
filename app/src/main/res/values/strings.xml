@@ -8,4 +8,5 @@
     <string name="disk">Диск</string>
     <string name="object_type">Тип объекта:</string>
     <string name="save">Сохранить</string>
+    <string name="back">Назад</string>
 </resources>
