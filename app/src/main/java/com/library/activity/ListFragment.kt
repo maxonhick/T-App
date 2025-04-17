@@ -1,20 +1,10 @@
 package com.library.activity
 
-import android.content.res.Configuration
 import android.os.Bundle
-import android.os.Parcelable
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.databinding.DataBindingUtil.setContentView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.setFragmentResultListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.library.Book
 import com.library.Disk
@@ -24,10 +14,9 @@ import com.library.Month
 import com.library.Newspaper
 import com.library.R
 import com.library.TypeLibraryObjects
-import com.library.databinding.ActivityMainBinding
+import com.library.activity.DetailFragment.Companion.NEW_ITEM
 import com.library.databinding.FragmentListBinding
 import com.tBankApp.recycler.LibraryAdapter
-import kotlinx.coroutines.launch
 
 const val SCROLL_POSITION = "SCROLL_POSITION"
 
@@ -41,8 +30,12 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         super.onCreate(savedInstanceState)
         binding = FragmentListBinding.inflate(layoutInflater)
 
-        setupRecyclerView()
-        setupClickListeners()
+//        setupRecyclerView()
+//        setupClickListeners()
+        setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
+            viewModel.addNewItem(bundle.getParcelable(requestKey)!!)
+            (activity as MainActivity).closeDetailFragment()
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,13 +54,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
     private fun setupRecyclerView() {
         adapter = LibraryAdapter { item ->
-            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                if (parentFragmentManager.findFragmentById(R.id.nav_host_fragment) !is DetailFragment) {
-                    navigateToDetail(item, false)
-                }
-            } else {
-                navigateToDetail(item, false)
-            }
+            (activity as MainActivity).showDetail(item, false)
         }
 
         binding.recyclerView.apply {
@@ -79,7 +66,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     private fun setupClickListeners() {
         binding.addBook.setOnClickListener {
             val newBook = Book(viewModel.getSize() + 1, false, "", TypeLibraryObjects.Book, 0, "")
-            navigateToDetail(
+            (activity as MainActivity).showDetail(
                 newBook,
                 true
             )
@@ -87,7 +74,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.addDisk.setOnClickListener {
             val newDisk = Disk(viewModel.getSize() + 1, false, "", DiskType.CD, TypeLibraryObjects.Disk)
-            navigateToDetail(
+            (activity as MainActivity).showDetail(
                 newDisk,
                 true
             )
@@ -96,7 +83,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.addNewspaper.setOnClickListener {
             val newNewspaper = Newspaper(viewModel.getSize() + 1, false, "", 0, Month.July, TypeLibraryObjects.Newspaper)
-            navigateToDetail(
+            (activity as MainActivity).showDetail(
                 newNewspaper,
                 true
             )

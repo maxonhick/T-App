@@ -9,8 +9,6 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
 import com.library.Book
 import com.library.Disk
 import com.library.DiskType
@@ -27,21 +25,6 @@ class DetailFragment : Fragment() {
     private lateinit var item: LibraryObjects
     private lateinit var typeObject: TypeLibraryObjects
     private val viewModel: LibraryViewModel by activityViewModels()
-
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        arguments?.let {
-//            isNew = it.getBoolean(IS_NEW)
-//            typeObject = TypeLibraryObjects.valueOf(it.getString(TYPE_OBJECT)!!)
-//            when (typeObject) {
-//                TypeLibraryObjects.Book -> item = it.getParcelable<Book>(BOOK_BUNDLE)
-//                TypeLibraryObjects.Disk -> item = it.getParcelable<Disk>(DISK_BUNDLE)
-//                TypeLibraryObjects.Newspaper -> item = it.getParcelable<Newspaper>(NEWSPAPER_BUNDLE)
-//                null -> null
-//            }
-//        }
-//    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -81,7 +64,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupForEditing() {
-        binding.saveButton.text = "Сохранить"
+        binding.saveButton.text = getString(R.string.save)
         when (item.objectType) {
             TypeLibraryObjects.Book -> setupBookEditing(item as Book)
             TypeLibraryObjects.Disk -> setupDiskEditing(item as Disk)
@@ -90,7 +73,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupForViewing() {
-        binding.saveButton.text = "Назад"
+        binding.saveButton.text = getString(R.string.back)
         when (item.objectType) {
             TypeLibraryObjects.Book -> setupBookViewing(item as Book)
             TypeLibraryObjects.Disk -> setupDiskViewing(item as Disk)
@@ -99,7 +82,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupBookViewing(item: Book) {
-        binding.typeLibraryObject.text = "Книга"
+        binding.typeLibraryObject.text = getString(R.string.book)
         binding.editName.isEnabled = false
         binding.editName.setText(item.name)
         binding.editId.setText(item.objectId.toString())
@@ -121,7 +104,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupDiskViewing(item: Disk){
-        binding.typeLibraryObject.text = "Диск"
+        binding.typeLibraryObject.text = getString(R.string.disk)
         binding.editName.isEnabled = false
         binding.editName.setText(item.name)
         binding.editId.setText(item.objectId.toString())
@@ -137,14 +120,11 @@ class DetailFragment : Fragment() {
         binding.diskType.visibility = View.VISIBLE
         binding.diskTypeSpinner.visibility = View.VISIBLE
         binding.diskTypeSpinner.isEnabled = false
-        binding.diskTypeSpinner.setSelection(when (item.type){
-            DiskType.DVD -> 1
-            DiskType.CD -> 0
-        })
+        binding.diskTypeSpinner.setSelection(item.type.ordinal)
     }
 
     private fun setupNewspaperViewing(item: Newspaper) {
-        binding.typeLibraryObject.text = "Газета"
+        binding.typeLibraryObject.text = getString(R.string.newspaper)
         binding.editName.isEnabled = false
         binding.editName.setText(item.name)
         binding.editId.setText(item.objectId.toString())
@@ -154,20 +134,7 @@ class DetailFragment : Fragment() {
         binding.month.visibility = View.VISIBLE
         binding.monthNewspaper.visibility = View.VISIBLE
         binding.diskTypeSpinner.isEnabled = false
-        binding.diskTypeSpinner.setSelection(when (item.month){
-            Month.January-> 0
-            Month.February -> 1
-            Month.March -> 2
-            Month.April -> 3
-            Month.May -> 4
-            Month.June -> 5
-            Month.July -> 6
-            Month.August -> 7
-            Month.September -> 8
-            Month.October -> 9
-            Month.November -> 10
-            Month.December -> 11
-        })
+        binding.diskTypeSpinner.setSelection(item.month.ordinal)
         binding.pages.visibility = View.GONE
         binding.editPages.visibility = View.GONE
         binding.releaseNumber.visibility = View.VISIBLE
@@ -179,7 +146,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupBookEditing(item: Book) {
-        binding.typeLibraryObject.text = "Книга"
+        binding.typeLibraryObject.text = getString(R.string.book)
         binding.editName.isEnabled = true
         binding.editId.text = item.objectId.toString()
         binding.editAuthor.visibility = View.VISIBLE
@@ -198,7 +165,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupDiskEditing(item: Disk) {
-        binding.typeLibraryObject.text = "Диск"
+        binding.typeLibraryObject.text = getString(R.string.disk)
         binding.editName.isEnabled = true
         binding.editId.text = item.objectId.toString()
         binding.editAuthor.visibility = View.GONE
@@ -225,7 +192,7 @@ class DetailFragment : Fragment() {
     }
 
     private fun setupNewspaperEditing(item: Newspaper) {
-        binding.typeLibraryObject.text = "Газета"
+        binding.typeLibraryObject.text = getString(R.string.newspaper)
         binding.editName.isEnabled = true
         binding.editId.text = item.objectId.toString()
         binding.editAuthor.visibility = View.GONE
@@ -259,19 +226,16 @@ class DetailFragment : Fragment() {
                     val newAuthor = binding.editAuthor.text.toString()
                     val newPages = Integer.parseInt(binding.editPages.text.toString())
                     val newId = Integer.parseInt(binding.editId.text.toString())
-                    viewModel.addNewItem(
-                        listOf(
-                            Book(
+                    parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                        putParcelable(NEW_ITEM, Book(
                             newId,
                             true,
                             newName,
                             TypeLibraryObjects.Book,
                             newPages,
                             newAuthor
-                            )
-                        )
-                    )
-                    (activity as MainActivity).closeDetailFragment()
+                        ))
+                    })
                 }
                 TypeLibraryObjects.Disk -> {
                     val newName = binding.editName.text.toString()
@@ -281,18 +245,15 @@ class DetailFragment : Fragment() {
                         1 -> DiskType.DVD
                         else -> DiskType.CD
                     }
-                    viewModel.addNewItem(
-                        listOf(
-                            Disk(
-                                objectId = newId,
-                                access = true,
-                                name = newName,
-                                type =  newTypeOfDisk,
-                                objectType = TypeLibraryObjects.Disk
-                            )
-                        )
-                    )
-                    (activity as MainActivity).closeDetailFragment()
+                    parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                        putParcelable(NEW_ITEM, Disk(
+                            objectId = newId,
+                            access = true,
+                            name = newName,
+                            type =  newTypeOfDisk,
+                            objectType = TypeLibraryObjects.Disk
+                        ))
+                    })
                 }
                 TypeLibraryObjects.Newspaper -> {
                     val newName = binding.editName.text.toString()
@@ -313,24 +274,20 @@ class DetailFragment : Fragment() {
                         11 -> Month.December
                         else -> Month.January
                     }
-                    viewModel.addNewItem(
-                        listOf(
-                            Newspaper(
-                                objectId = newId,
-                                access = true,
-                                name = newName,
-                                releaseNumber = newReleaseNumber,
-                                month = newMonth,
-                                objectType = TypeLibraryObjects.Newspaper
-                            )
-                        )
-                    )
-                    (activity as MainActivity).closeDetailFragment()
+                    parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                        putParcelable(NEW_ITEM, Newspaper(
+                            objectId = newId,
+                            access = true,
+                            name = newName,
+                            releaseNumber = newReleaseNumber,
+                            month = newMonth,
+                            objectType = TypeLibraryObjects.Newspaper
+                        ))
+                    })
                 }
             }
-        } else {
-            (activity as MainActivity).closeDetailFragment()
         }
+        (activity as MainActivity).closeDetailFragment()
     }
 
     override fun onDestroyView() {
@@ -347,6 +304,7 @@ class DetailFragment : Fragment() {
         const val DISK_BUNDLE = "DISK_BUNDLE"
         const val TYPE_OBJECT = "TYPE_OBJECT"
         const val CURRENT_ITEM = "CURRENT_ITEM"
+        const val NEW_ITEM = "NEW_ITEM"
 
         fun newInstance(isNew: Boolean, item: LibraryObjects) = DetailFragment().apply {
             arguments = Bundle().apply {

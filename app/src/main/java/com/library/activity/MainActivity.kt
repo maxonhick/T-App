@@ -2,10 +2,8 @@ package com.library.activity
 
 import android.content.res.Configuration
 import android.os.Bundle
-import androidx.activity.viewModels
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.FragmentManager
-import androidx.navigation.NavController
 import com.library.LibraryObjects
 import com.library.R
 import com.library.activity.DetailFragment.Companion.CURRENT_ITEM
@@ -27,9 +25,24 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             currentDetailItem = savedInstanceState.getParcelable(CURRENT_ITEM)
             isNewItem = savedInstanceState.getBoolean(IS_NEW, false)
+            setupFragments()
+        } else {
+            if (isLandscape) {
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.listFragment, ListFragment())
+                    .commit()
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.detailContainer, EmptyFragment())
+                    .commit()
+            } else {
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.nav_host_fragment, ListFragment())
+                    .commit()
+            }
         }
-
-        setupFragments()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -43,13 +56,18 @@ class MainActivity : AppCompatActivity() {
         val newOrientation = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
         if (isLandscape != newOrientation) {
             isLandscape = newOrientation
-            setupFragments()
         }
+        setupFragments()
     }
 
     private fun setupFragments() {
         if (isLandscape) {
-            supportFragmentManager.beginTransaction()
+            // Make sure containers are visible
+            binding.listFragment.visibility = View.VISIBLE
+            binding.detailContainer.visibility = View.VISIBLE
+
+            supportFragmentManager
+                .beginTransaction()
                 .replace(R.id.listFragment, ListFragment())
                 .commit()
 
@@ -61,22 +79,23 @@ class MainActivity : AppCompatActivity() {
                     .commit()
             }
         } else {
-            supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.nav_host_fragment, ListFragment())
-                .commit()
+            // Hide landscape containers
+            binding.listFragment.visibility = View.GONE
+            binding.detailContainer.visibility = View.GONE
+
+            currentDetailItem?.let {
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.nav_host_fragment, DetailFragment.newInstance(isNewItem, it))
+                    .addToBackStack(null)
+                    .commit()
+            } ?: run {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment, ListFragment())
+                    .commit()
+            }
         }
-//            if (currentDetailItem != null) {
-//                supportFragmentManager
-//                    .beginTransaction()
-//                    .replace(R.id.nav_host_fragment, DetailFragment.newInstance(isNewItem, currentDetailItem!!))
-//                    .addToBackStack(null)
-//                    .commit()
-//            } else {
-//                supportFragmentManager.beginTransaction()
-//                    .replace(R.id.nav_host_fragment, ListFragment())
-//                    .commit()
-//            }
     }
 
 
@@ -86,38 +105,37 @@ class MainActivity : AppCompatActivity() {
 
         val detailFragment = DetailFragment.newInstance(isNew, item)
         if (isLandscape) {
-            supportFragmentManager.beginTransaction()
+            supportFragmentManager
+                .beginTransaction()
                 .replace(R.id.detailContainer, detailFragment)
                 .commitNow()
         } else {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.nav_host_fragment, detailFragment)
-                .addToBackStack(null)
-                .commit()
+            if (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) !is DetailFragment) {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment, detailFragment)
+                    .addToBackStack(null)
+                    .commit()
+            }
         }
     }
 
     fun closeDetailFragment() {
         currentDetailItem = null
         if (isLandscape) {
-            supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.detailContainer, EmptyFragment())
-                .commit()
+            if (!isFinishing && !supportFragmentManager.isStateSaved) {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.detailContainer, EmptyFragment())
+                    .commit()
+            }
         } else {
-            supportFragmentManager.popBackStack()
+            if (!isFinishing && !supportFragmentManager.isStateSaved) {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment, ListFragment())
+                    .commit()
+            }
         }
-    }
-
-    fun scrollToNewItem() {
-        val listFragment = supportFragmentManager.findFragmentById(R.id.listFragment) as ListFragment
-        listFragment.scrollToLastItem()
-    }
-
-    private fun openFragment() {
-        supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.nav_host_fragment, ListFragment())
-            .commit()
     }
 }
