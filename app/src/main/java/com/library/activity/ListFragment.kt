@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.library.Book
 import com.library.Disk
 import com.library.DiskType
@@ -26,20 +27,25 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     private lateinit var adapter: LibraryAdapter
     private var scrollPosition: Int = 0
     private var closeListener: FragmentCloseListener? = null
+    private var openDetailListener: OpenDetailFragment? = null
+    private lateinit var shimmerView: ShimmerFrameLayout
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         closeListener = context as? FragmentCloseListener
+        openDetailListener = context as? OpenDetailFragment
     }
 
     override fun onDetach() {
         super.onDetach()
         closeListener = null
+        openDetailListener = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = FragmentListBinding.inflate(layoutInflater)
+        shimmerView = binding.shimmerViewContainer
 
         setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
             viewModel.addNewItem(bundle.getParcelable(requestKey)!!)
@@ -58,12 +64,33 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             adapter.submitList(items)
         }
 
+        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                binding.recyclerView.visibility = View.GONE
+                shimmerView.visibility = View.VISIBLE
+                shimmerView.startShimmer()
+            } else {
+                shimmerView.stopShimmer()
+                shimmerView.visibility = View.GONE
+                binding.recyclerView.visibility = View.VISIBLE
+            }
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let {
+                binding.errorMessage.text = it
+                binding.errorMessage.visibility = View.VISIBLE
+            } ?: run {
+                binding.errorMessage.visibility = View.GONE
+            }
+        }
+
         binding.recyclerView.adapter = adapter
     }
 
     private fun setupRecyclerView() {
         adapter = LibraryAdapter { item ->
-            (activity as MainActivity).showDetail(item, false)
+            openDetailListener?.showDetail(item, false)
         }
 
         binding.recyclerView.apply {
@@ -75,7 +102,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     private fun setupClickListeners() {
         binding.addBook.setOnClickListener {
             val newBook = Book(viewModel.getSize() + 1, false, "", TypeLibraryObjects.Book, 0, "")
-            (activity as MainActivity).showDetail(
+            openDetailListener?.showDetail(
                 newBook,
                 true
             )
@@ -83,7 +110,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.addDisk.setOnClickListener {
             val newDisk = Disk(viewModel.getSize() + 1, false, "", DiskType.CD, TypeLibraryObjects.Disk)
-            (activity as MainActivity).showDetail(
+            openDetailListener?.showDetail(
                 newDisk,
                 true
             )
@@ -92,7 +119,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.addNewspaper.setOnClickListener {
             val newNewspaper = Newspaper(viewModel.getSize() + 1, false, "", 0, Month.July, TypeLibraryObjects.Newspaper)
-            (activity as MainActivity).showDetail(
+            openDetailListener?.showDetail(
                 newNewspaper,
                 true
             )

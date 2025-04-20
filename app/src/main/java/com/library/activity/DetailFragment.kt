@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.library.Book
 import com.library.Disk
 import com.library.DiskType
@@ -19,6 +20,9 @@ import com.library.Newspaper
 import com.library.R
 import com.library.TypeLibraryObjects
 import com.library.databinding.FragmentDetailBinding
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class DetailFragment : Fragment() {
     private lateinit var binding: FragmentDetailBinding
@@ -144,8 +148,8 @@ class DetailFragment : Fragment() {
         binding.valAccess.text = item.access.toString()
         binding.month.visibility = View.VISIBLE
         binding.monthNewspaper.visibility = View.VISIBLE
-        binding.diskTypeSpinner.isEnabled = false
-        binding.diskTypeSpinner.setSelection(item.month.ordinal)
+        binding.monthNewspaper.setSelection(item.month.ordinal)
+        binding.diskTypeSpinner.visibility = View.GONE
         binding.pages.visibility = View.GONE
         binding.editPages.visibility = View.GONE
         binding.releaseNumber.visibility = View.VISIBLE
@@ -237,48 +241,94 @@ class DetailFragment : Fragment() {
                     if (!binding.editName.text.isNullOrEmpty() && !binding.editAuthor.text.isNullOrEmpty()
                         && !binding.editPages.text.isNullOrEmpty() && binding.editPages.text.all { it.isDigit()}
                         && !binding.editId.text.isNullOrEmpty()) {
-                        val newName = binding.editName.text.toString()
-                        val newAuthor = binding.editAuthor.text.toString()
-                        val newPages = Integer.parseInt(binding.editPages.text.toString())
-                        val newId = Integer.parseInt(binding.editId.text.toString())
-                        parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
-                            putParcelable(
-                                NEW_ITEM, Book(
-                                    newId,
-                                    true,
-                                    newName,
-                                    TypeLibraryObjects.Book,
-                                    newPages,
-                                    newAuthor
-                                )
-                            )
-                        })
+                        lifecycleScope.launch {
+                            try {
+                                binding.progressBar.visibility = View.VISIBLE
+                                binding.saveButton.isEnabled = false
+
+                                delay(Random.nextLong(500, 1000))
+
+                                if (Random.nextInt(5) == 0) {
+                                    throw Exception("Ошибка сохранения книги")
+                                }
+
+                                val newName = binding.editName.text.toString()
+                                val newAuthor = binding.editAuthor.text.toString()
+                                val newPages = Integer.parseInt(binding.editPages.text.toString())
+                                val newId = Integer.parseInt(binding.editId.text.toString())
+                                parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                                    putParcelable(
+                                        NEW_ITEM, Book(
+                                            newId,
+                                            true,
+                                            newName,
+                                            TypeLibraryObjects.Book,
+                                            newPages,
+                                            newAuthor
+                                        )
+                                    )
+                                })
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Ошибка: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                close = false
+                            } finally {
+                                binding.progressBar.visibility = View.GONE
+                                binding.saveButton.isEnabled = true
+                            }
+                        }
                     } else {
                         Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
                         close = false
                     }
                 }
                 TypeLibraryObjects.Disk -> {
-                    if (!binding.editName.text.isNullOrEmpty() && !binding.editId.text.isNullOrEmpty()
-                        && binding.diskTypeSpinner.selectedItemPosition != 0) {
-                        val newName = binding.editName.text.toString()
-                        val newId = Integer.parseInt(binding.editId.text.toString())
-                        val newTypeOfDisk = when (binding.diskTypeSpinner.selectedItemPosition) {
-                            0 -> DiskType.CD
-                            1 -> DiskType.DVD
-                            else -> DiskType.CD
+                    if (!binding.editName.text.isNullOrEmpty()) {
+                        lifecycleScope.launch {
+                            try {
+                                binding.progressBar.visibility = View.VISIBLE
+                                binding.saveButton.isEnabled = false
+
+                                delay(Random.nextLong(500, 1000))
+
+                                if (Random.nextInt(5) == 0) {
+                                    throw Exception("Ошибка сохранения книги")
+                                }
+
+                                val newName = binding.editName.text.toString()
+                                val newId = Integer.parseInt(binding.editId.text.toString())
+                                val newTypeOfDisk =
+                                    when (binding.diskTypeSpinner.selectedItemPosition) {
+                                        0 -> DiskType.CD
+                                        1 -> DiskType.DVD
+                                        else -> DiskType.CD
+                                    }
+                                parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                                    putParcelable(
+                                        NEW_ITEM, Disk(
+                                            objectId = newId,
+                                            access = true,
+                                            name = newName,
+                                            type = newTypeOfDisk,
+                                            objectType = TypeLibraryObjects.Disk
+                                        )
+                                    )
+                                })
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Ошибка: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                close = false
+                            } finally {
+                                binding.progressBar.visibility = View.GONE
+                                binding.saveButton.isEnabled = true
+                            }
                         }
-                        parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
-                            putParcelable(
-                                NEW_ITEM, Disk(
-                                    objectId = newId,
-                                    access = true,
-                                    name = newName,
-                                    type = newTypeOfDisk,
-                                    objectType = TypeLibraryObjects.Disk
-                                )
-                            )
-                        })
                     } else {
                         Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
                         close = false
@@ -286,38 +336,61 @@ class DetailFragment : Fragment() {
                 }
                 TypeLibraryObjects.Newspaper -> {
                     if (!binding.editName.text.isNullOrEmpty() && !binding.editReleaseNumber.text.isNullOrEmpty()
-                        && binding.editReleaseNumber.text.all { it.isDigit() } && binding.monthNewspaper.selectedItemPosition != 0) {
-                        val newName = binding.editName.text.toString()
-                        val newReleaseNumber =
-                            Integer.parseInt(binding.editReleaseNumber.text.toString())
-                        val newId = Integer.parseInt(binding.editId.text.toString())
-                        val newMonth = when (binding.monthNewspaper.selectedItemPosition) {
-                            0 -> Month.January
-                            1 -> Month.February
-                            2 -> Month.March
-                            3 -> Month.April
-                            4 -> Month.May
-                            5 -> Month.June
-                            6 -> Month.July
-                            7 -> Month.August
-                            8 -> Month.September
-                            9 -> Month.October
-                            10 -> Month.November
-                            11 -> Month.December
-                            else -> Month.January
+                        && binding.editReleaseNumber.text.all { it.isDigit() }) {
+                        lifecycleScope.launch {
+                            try {
+                                binding.progressBar.visibility = View.VISIBLE
+                                binding.saveButton.isEnabled = false
+
+                                delay(Random.nextLong(500, 1000))
+
+                                if (Random.nextInt(5) == 0) {
+                                    throw Exception("Ошибка сохранения книги")
+                                }
+
+                                val newName = binding.editName.text.toString()
+                                val newReleaseNumber =
+                                    Integer.parseInt(binding.editReleaseNumber.text.toString())
+                                val newId = Integer.parseInt(binding.editId.text.toString())
+                                val newMonth = when (binding.monthNewspaper.selectedItemPosition) {
+                                    0 -> Month.January
+                                    1 -> Month.February
+                                    2 -> Month.March
+                                    3 -> Month.April
+                                    4 -> Month.May
+                                    5 -> Month.June
+                                    6 -> Month.July
+                                    7 -> Month.August
+                                    8 -> Month.September
+                                    9 -> Month.October
+                                    10 -> Month.November
+                                    11 -> Month.December
+                                    else -> Month.January
+                                }
+                                parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                                    putParcelable(
+                                        NEW_ITEM, Newspaper(
+                                            objectId = newId,
+                                            access = true,
+                                            name = newName,
+                                            releaseNumber = newReleaseNumber,
+                                            month = newMonth,
+                                            objectType = TypeLibraryObjects.Newspaper
+                                        )
+                                    )
+                                })
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Ошибка: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                close = false
+                            } finally {
+                                binding.progressBar.visibility = View.GONE
+                                binding.saveButton.isEnabled = true
+                            }
                         }
-                        parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
-                            putParcelable(
-                                NEW_ITEM, Newspaper(
-                                    objectId = newId,
-                                    access = true,
-                                    name = newName,
-                                    releaseNumber = newReleaseNumber,
-                                    month = newMonth,
-                                    objectType = TypeLibraryObjects.Newspaper
-                                )
-                            )
-                        })
                     } else {
                         Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
                         close = false
