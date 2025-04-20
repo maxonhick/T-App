@@ -10,7 +10,7 @@ import com.library.activity.DetailFragment.Companion.CURRENT_ITEM
 import com.library.activity.DetailFragment.Companion.IS_NEW
 import com.library.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), FragmentCloseListener {
     private lateinit var binding: ActivityMainBinding
     private var isLandscape: Boolean = false
     private var currentDetailItem: LibraryObjects? = null
@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun closeDetailFragment() {
+    override fun closeDetailFragment() {
         currentDetailItem = null
         if (isLandscape) {
             if (!isFinishing && !supportFragmentManager.isStateSaved) {

@@ -1,5 +1,6 @@
 package com.library.activity
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -24,6 +25,17 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     private val viewModel: LibraryViewModel by activityViewModels()
     private lateinit var adapter: LibraryAdapter
     private var scrollPosition: Int = 0
+    private var closeListener: FragmentCloseListener? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        closeListener = context as? FragmentCloseListener
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        closeListener = null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +43,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
             viewModel.addNewItem(bundle.getParcelable(requestKey)!!)
-            (activity as MainActivity).closeDetailFragment()
+            closeListener?.closeDetailFragment()
         }
     }
 

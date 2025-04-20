@@ -1,5 +1,6 @@
 package com.library.activity
 
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,6 +25,17 @@ class DetailFragment : Fragment() {
     private var isNew: Boolean = false
     private lateinit var item: LibraryObjects
     private lateinit var typeObject: TypeLibraryObjects
+    private var closeListener: FragmentCloseListener? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        closeListener = context as? FragmentCloseListener
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        closeListener = null
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,7 +69,7 @@ class DetailFragment : Fragment() {
             if (isNew) {
                 saveNewItem()
             } else {
-                (activity as MainActivity).closeDetailFragment()
+                closeListener?.closeDetailFragment()
             }
         }
     }
@@ -313,13 +325,13 @@ class DetailFragment : Fragment() {
                 }
             }
         }
-        if (close) (activity as MainActivity).closeDetailFragment()
+        if (close) closeListener?.closeDetailFragment()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            (activity as MainActivity).closeDetailFragment()
+            closeListener?.closeDetailFragment()
         }
     }
 
