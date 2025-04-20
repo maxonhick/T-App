@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.library.Book
 import com.library.Disk
 import com.library.DiskType
-import com.library.LibraryObjects
 import com.library.Month
 import com.library.Newspaper
 import com.library.R
@@ -30,8 +29,6 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         super.onCreate(savedInstanceState)
         binding = FragmentListBinding.inflate(layoutInflater)
 
-//        setupRecyclerView()
-//        setupClickListeners()
         setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
             viewModel.addNewItem(bundle.getParcelable(requestKey)!!)
             (activity as MainActivity).closeDetailFragment()
@@ -96,15 +93,6 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             .findFirstVisibleItemPosition()
     }
 
-    fun scrollToLastItem() {
-        binding.recyclerView.post {
-            val lastPosition = adapter.itemCount - 1
-            if (lastPosition >= 0) {
-                binding.recyclerView.scrollToPosition(lastPosition)
-            }
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(SCROLL_POSITION, scrollPosition)
@@ -118,9 +106,5 @@ class ListFragment : Fragment(R.layout.fragment_list) {
                 binding.recyclerView.scrollToPosition(scrollPosition)
             }
         }
-    }
-
-    private fun navigateToDetail(item: LibraryObjects, isNew: Boolean) {
-        (activity as MainActivity).showDetail(item, isNew)
     }
 }

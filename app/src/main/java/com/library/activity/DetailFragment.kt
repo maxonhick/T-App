@@ -7,8 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import com.library.Book
 import com.library.Disk
 import com.library.DiskType
@@ -24,7 +24,6 @@ class DetailFragment : Fragment() {
     private var isNew: Boolean = false
     private lateinit var item: LibraryObjects
     private lateinit var typeObject: TypeLibraryObjects
-    private val viewModel: LibraryViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -219,75 +218,102 @@ class DetailFragment : Fragment() {
     }
 
     private fun saveNewItem() {
+        var close = true
         if (isNew) {
             when (typeObject) {
                 TypeLibraryObjects.Book -> {
-                    val newName = binding.editName.text.toString()
-                    val newAuthor = binding.editAuthor.text.toString()
-                    val newPages = Integer.parseInt(binding.editPages.text.toString())
-                    val newId = Integer.parseInt(binding.editId.text.toString())
-                    parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
-                        putParcelable(NEW_ITEM, Book(
-                            newId,
-                            true,
-                            newName,
-                            TypeLibraryObjects.Book,
-                            newPages,
-                            newAuthor
-                        ))
-                    })
+                    if (!binding.editName.text.isNullOrEmpty() && !binding.editAuthor.text.isNullOrEmpty()
+                        && !binding.editPages.text.isNullOrEmpty() && binding.editPages.text.all { it.isDigit()}
+                        && !binding.editId.text.isNullOrEmpty()) {
+                        val newName = binding.editName.text.toString()
+                        val newAuthor = binding.editAuthor.text.toString()
+                        val newPages = Integer.parseInt(binding.editPages.text.toString())
+                        val newId = Integer.parseInt(binding.editId.text.toString())
+                        parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                            putParcelable(
+                                NEW_ITEM, Book(
+                                    newId,
+                                    true,
+                                    newName,
+                                    TypeLibraryObjects.Book,
+                                    newPages,
+                                    newAuthor
+                                )
+                            )
+                        })
+                    } else {
+                        Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
+                        close = false
+                    }
                 }
                 TypeLibraryObjects.Disk -> {
-                    val newName = binding.editName.text.toString()
-                    val newId = Integer.parseInt(binding.editId.text.toString())
-                    val newTypeOfDisk = when (binding.diskTypeSpinner.selectedItemPosition) {
-                        0 -> DiskType.CD
-                        1 -> DiskType.DVD
-                        else -> DiskType.CD
+                    if (!binding.editName.text.isNullOrEmpty() && !binding.editId.text.isNullOrEmpty()
+                        && binding.diskTypeSpinner.selectedItemPosition != 0) {
+                        val newName = binding.editName.text.toString()
+                        val newId = Integer.parseInt(binding.editId.text.toString())
+                        val newTypeOfDisk = when (binding.diskTypeSpinner.selectedItemPosition) {
+                            0 -> DiskType.CD
+                            1 -> DiskType.DVD
+                            else -> DiskType.CD
+                        }
+                        parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                            putParcelable(
+                                NEW_ITEM, Disk(
+                                    objectId = newId,
+                                    access = true,
+                                    name = newName,
+                                    type = newTypeOfDisk,
+                                    objectType = TypeLibraryObjects.Disk
+                                )
+                            )
+                        })
+                    } else {
+                        Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
+                        close = false
                     }
-                    parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
-                        putParcelable(NEW_ITEM, Disk(
-                            objectId = newId,
-                            access = true,
-                            name = newName,
-                            type =  newTypeOfDisk,
-                            objectType = TypeLibraryObjects.Disk
-                        ))
-                    })
                 }
                 TypeLibraryObjects.Newspaper -> {
-                    val newName = binding.editName.text.toString()
-                    val newReleaseNumber = Integer.parseInt(binding.editReleaseNumber.text.toString())
-                    val newId = Integer.parseInt(binding.editId.text.toString())
-                    val newMonth = when (binding.monthNewspaper.selectedItemPosition) {
-                        0 -> Month.January
-                        1 -> Month.February
-                        2 -> Month.March
-                        3 -> Month.April
-                        4 -> Month.May
-                        5 -> Month.June
-                        6 -> Month.July
-                        7 -> Month.August
-                        8 -> Month.September
-                        9 -> Month.October
-                        10 -> Month.November
-                        11 -> Month.December
-                        else -> Month.January
+                    if (!binding.editName.text.isNullOrEmpty() && !binding.editReleaseNumber.text.isNullOrEmpty()
+                        && binding.editReleaseNumber.text.all { it.isDigit() } && binding.monthNewspaper.selectedItemPosition != 0) {
+                        val newName = binding.editName.text.toString()
+                        val newReleaseNumber =
+                            Integer.parseInt(binding.editReleaseNumber.text.toString())
+                        val newId = Integer.parseInt(binding.editId.text.toString())
+                        val newMonth = when (binding.monthNewspaper.selectedItemPosition) {
+                            0 -> Month.January
+                            1 -> Month.February
+                            2 -> Month.March
+                            3 -> Month.April
+                            4 -> Month.May
+                            5 -> Month.June
+                            6 -> Month.July
+                            7 -> Month.August
+                            8 -> Month.September
+                            9 -> Month.October
+                            10 -> Month.November
+                            11 -> Month.December
+                            else -> Month.January
+                        }
+                        parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
+                            putParcelable(
+                                NEW_ITEM, Newspaper(
+                                    objectId = newId,
+                                    access = true,
+                                    name = newName,
+                                    releaseNumber = newReleaseNumber,
+                                    month = newMonth,
+                                    objectType = TypeLibraryObjects.Newspaper
+                                )
+                            )
+                        })
+                    } else {
+                        Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
+                        close = false
                     }
-                    parentFragmentManager.setFragmentResult(NEW_ITEM, Bundle().apply {
-                        putParcelable(NEW_ITEM, Newspaper(
-                            objectId = newId,
-                            access = true,
-                            name = newName,
-                            releaseNumber = newReleaseNumber,
-                            month = newMonth,
-                            objectType = TypeLibraryObjects.Newspaper
-                        ))
-                    })
                 }
             }
         }
-        (activity as MainActivity).closeDetailFragment()
+        if (close) (activity as MainActivity).closeDetailFragment()
     }
 
     override fun onDestroyView() {

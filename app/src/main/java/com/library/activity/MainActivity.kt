@@ -79,7 +79,6 @@ class MainActivity : AppCompatActivity() {
                     .commit()
             }
         } else {
-            // Hide landscape containers
             binding.listFragment.visibility = View.GONE
             binding.detailContainer.visibility = View.GONE
 
