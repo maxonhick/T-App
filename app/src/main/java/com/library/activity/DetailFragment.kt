@@ -295,7 +295,7 @@ class DetailFragment : Fragment() {
                                 delay(Random.nextLong(500, 1000))
 
                                 if (Random.nextInt(5) == 0) {
-                                    throw Exception("Ошибка сохранения книги")
+                                    throw Exception("Ошибка сохранения диска")
                                 }
 
                                 val newName = binding.editName.text.toString()
@@ -345,7 +345,7 @@ class DetailFragment : Fragment() {
                                 delay(Random.nextLong(500, 1000))
 
                                 if (Random.nextInt(5) == 0) {
-                                    throw Exception("Ошибка сохранения книги")
+                                    throw Exception("Ошибка сохранения газеты")
                                 }
 
                                 val newName = binding.editName.text.toString()

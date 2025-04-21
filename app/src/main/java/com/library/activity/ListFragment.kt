@@ -60,28 +60,46 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         setupRecyclerView()
         setupClickListeners()
-        viewModel.items.observe(viewLifecycleOwner) { items ->
-            adapter.submitList(items)
-        }
+        viewModel.screenState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ScreenState.Loading -> with(binding) {
+                    shimmerViewContainer.visibility = View.VISIBLE
+                    shimmerViewContainer.startShimmer()
+                    recyclerView.visibility = View.GONE
+                    errorContainer.visibility = View.GONE
+                    buttonContainer.visibility = View.GONE
+                    addProgressBar.visibility = View.GONE
+                }
+                is ScreenState.Content -> with(binding) {
+                    shimmerViewContainer.stopShimmer()
+                    shimmerViewContainer.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                    errorContainer.visibility = View.GONE
+                    buttonContainer.visibility = View.VISIBLE
+                    addProgressBar.visibility = View.GONE
 
-        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
-            if (isLoading) {
-                binding.recyclerView.visibility = View.GONE
-                shimmerView.visibility = View.VISIBLE
-                shimmerView.startShimmer()
-            } else {
-                shimmerView.stopShimmer()
-                shimmerView.visibility = View.GONE
-                binding.recyclerView.visibility = View.VISIBLE
-            }
-        }
+                    adapter.submitList(state.items)
+                }
+                is ScreenState.Error -> with(binding) {
+                    shimmerViewContainer.stopShimmer()
+                    shimmerViewContainer.visibility = View.GONE
+                    recyclerView.visibility = View.GONE
+                    errorContainer.visibility = View.VISIBLE
+                    buttonContainer.visibility = View.GONE
+                    addProgressBar.visibility = View.GONE
 
-        viewModel.error.observe(viewLifecycleOwner) { errorMessage ->
-            errorMessage?.let {
-                binding.errorMessage.text = it
-                binding.errorMessage.visibility = View.VISIBLE
-            } ?: run {
-                binding.errorMessage.visibility = View.GONE
+                    errorMessage.text = state.message
+                }
+                is ScreenState.AddingItem -> with(binding) {
+                    adapter.submitList(state.currentItems)
+
+                    addProgressBar.visibility = View.VISIBLE
+                    buttonContainer.visibility = View.GONE
+
+                    shimmerViewContainer.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                    errorContainer.visibility = View.GONE
+                }
             }
         }
 
@@ -100,29 +118,44 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     }
 
     private fun setupClickListeners() {
+        binding.retryButton.setOnClickListener {
+            viewModel.retryLoading()
+        }
+
         binding.addBook.setOnClickListener {
-            val newBook = Book(viewModel.getSize() + 1, false, "", TypeLibraryObjects.Book, 0, "")
-            openDetailListener?.showDetail(
-                newBook,
-                true
-            )
+            if (viewModel.screenState.value !is ScreenState.AddingItem) {
+                val nextId = (viewModel.screenState.value as? ScreenState.Content)?.items?.size?.plus(1) ?: 1
+                val newBook = Book(nextId, false, "", TypeLibraryObjects.Book, 0, "")
+                openDetailListener?.showDetail(
+                    newBook,
+                    true
+                )
+            }
         }
 
         binding.addDisk.setOnClickListener {
-            val newDisk = Disk(viewModel.getSize() + 1, false, "", DiskType.CD, TypeLibraryObjects.Disk)
-            openDetailListener?.showDetail(
-                newDisk,
-                true
-            )
-
+            if (viewModel.screenState.value !is ScreenState.AddingItem) {
+                val nextId =
+                    (viewModel.screenState.value as? ScreenState.Content)?.items?.size?.plus(1) ?: 1
+                val newDisk = Disk(nextId, false, "", DiskType.CD, TypeLibraryObjects.Disk)
+                openDetailListener?.showDetail(
+                    newDisk,
+                    true
+                )
+            }
         }
 
         binding.addNewspaper.setOnClickListener {
-            val newNewspaper = Newspaper(viewModel.getSize() + 1, false, "", 0, Month.July, TypeLibraryObjects.Newspaper)
-            openDetailListener?.showDetail(
-                newNewspaper,
-                true
-            )
+            if (viewModel.screenState.value !is ScreenState.AddingItem) {
+                val nextId =
+                    (viewModel.screenState.value as? ScreenState.Content)?.items?.size?.plus(1) ?: 1
+                val newNewspaper =
+                    Newspaper(nextId, false, "", 0, Month.July, TypeLibraryObjects.Newspaper)
+                openDetailListener?.showDetail(
+                    newNewspaper,
+                    true
+                )
+            }
         }
     }
 

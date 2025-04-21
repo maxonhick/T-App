@@ -17,12 +17,11 @@ import kotlin.random.Random
 
 class LibraryViewModel : ViewModel(){
     private val _items = MutableLiveData<List<LibraryObjects>>(emptyList())
-    private val _loading = MutableLiveData<Boolean>(false)
-    private val _error = MutableLiveData<String?>()
+    private val _screenState = MutableLiveData<ScreenState>(ScreenState.Loading)
 
     val items: LiveData<List<LibraryObjects>> = _items
-    val loading: LiveData<Boolean> = _loading
-    val error: LiveData<String?> = _error
+    val screenState: LiveData<ScreenState> = _screenState
+    private var currentItems: List<LibraryObjects> = emptyList()
 
     init {
         loadInitialData()
@@ -31,21 +30,24 @@ class LibraryViewModel : ViewModel(){
     private fun loadInitialData() {
         viewModelScope.launch {
             try {
-                _loading.value = true
+                _screenState.value = ScreenState.Loading
+
                 delay(Random.nextLong(1000, 2000))
 
                 if (Random.nextInt(5) == 0) {
                     throw Exception("Ошибка загрузки данных")
                 }
-                val list = loadLibraryItems()
-                _items.value = list
-                _error.value = null
+
+                currentItems = loadLibraryItems()
+                _screenState.value = ScreenState.Content(currentItems)
             } catch (e: Exception) {
-                _error.value = e.message ?: "Неизвестная ошибка"
-            } finally {
-                _loading.value = false
+                _screenState.value = ScreenState.Error(e.message ?: "Неизвестная ошибка")
             }
         }
+    }
+
+    fun retryLoading() {
+        loadInitialData()
     }
 
     private suspend fun loadLibraryItems(): List<LibraryObjects> {
@@ -143,25 +145,32 @@ class LibraryViewModel : ViewModel(){
 
     fun addNewItem(item: LibraryObjects) {
         viewModelScope.launch {
+            val previousState =  when (val state = _screenState.value) {
+                is ScreenState.Content -> state.items
+                is ScreenState.AddingItem -> state.currentItems
+                else -> emptyList()
+            }
             try {
-                _loading.value = true
+                _screenState.value = ScreenState.AddingItem(currentItems)
                 delay(Random.nextLong(500, 1500))
 
                 if (Random.nextInt(5) == 0) {
                     throw Exception("Ошибка сохранения данных")
                 }
 
-                val currentList = _items.value?.toMutableList() ?: mutableListOf()
-                currentList.add(item)
-                _items.value = currentList.distinctBy { it.objectId }
-                _error.value = null
+                val newItems = currentItems.toMutableList().apply {
+                    add(item)
+                }
+                currentItems = newItems
+                _screenState.value = ScreenState.Content(newItems)
             } catch (e: Exception) {
-                _error.value = e.message ?: "Неизвестная ошибка"
-            } finally {
-                _loading.value = false
+                _screenState.value = when (val state = _screenState.value) {
+                    is ScreenState.AddingItem -> ScreenState.Content(state.currentItems)
+                    else -> ScreenState.Error(e.message ?: "Ошибка при добавлении")
+                }
             }
         }
     }
 
-    fun getSize(): Int = _items.value?.size ?: 0
+    fun getSize(): Int = currentItems.size
 }
