@@ -6,7 +6,14 @@
     <string name="newspaper">Газета</string>
     <string name="book">Книга</string>
     <string name="disk">Диск</string>
-    <string name="object_type">Тип объекта:</string>
+    <string name="object_type">Название:</string>
     <string name="save">Сохранить</string>
     <string name="back">Назад</string>
+    <string name="ID">ID объекта</string>
+    <string name="Access">Достпуность:</string>
+    <string name="Author">Автор</string>
+    <string name="Pages">Количество страниц:</string>
+    <string name="DiskType">Тип диска:</string>
+    <string name="Month">Месяц выпуска</string>
+    <string name="ReleaseNumber">Номер релиза</string>
 </resources>

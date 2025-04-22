@@ -10,7 +10,7 @@ import com.library.activity.DetailFragment.Companion.CURRENT_ITEM
 import com.library.activity.DetailFragment.Companion.IS_NEW
 import com.library.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(), FragmentCloseListener {
+class MainActivity : AppCompatActivity(), FragmentCloseListener, OpenDetailFragment {
     private lateinit var binding: ActivityMainBinding
     private var isLandscape: Boolean = false
     private var currentDetailItem: LibraryObjects? = null
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity(), FragmentCloseListener {
     }
 
 
-    fun showDetail(item: LibraryObjects, isNew: Boolean) {
+    override fun showDetail(item: LibraryObjects, isNew: Boolean) {
         currentDetailItem = item
         isNewItem = isNew
 
