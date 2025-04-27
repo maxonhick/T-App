@@ -9,15 +9,17 @@ class Book(
     name: String,
     objectType: TypeLibraryObjects,
     val pages: Int,
-    val author: String
-): LibraryObjects(objectId, access, name, objectType), Homeable, Readable, Parcelable {
+    val author: String,
+    createdAt: Long = System.currentTimeMillis()
+): LibraryObjects(objectId, access, name, objectType, createdAt), Homeable, Readable, Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readByte() != 0.toByte(),
         parcel.readString() ?: "",
         TypeLibraryObjects.valueOf(parcel.readString() ?: "BOOK"),
         parcel.readInt(),
-        parcel.readString() ?: ""
+        parcel.readString() ?: "",
+        parcel.readLong()
     )
 
     override fun longInformation() {
@@ -59,6 +61,7 @@ class Book(
         parcel.writeString(objectType.name)
         parcel.writeInt(pages)
         parcel.writeString(author)
+        parcel.writeLong(createdAt)
     }
 
     override fun describeContents(): Int {

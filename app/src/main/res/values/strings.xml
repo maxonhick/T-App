@@ -16,4 +16,7 @@
     <string name="DiskType">Тип диска:</string>
     <string name="Month">Месяц выпуска</string>
     <string name="ReleaseNumber">Номер релиза</string>
+    <string name="Retry">Потворить попытку</string>
+    <string name="Sort_by_name">По названию</string>
+    <string name="Sort_by_data">По дате</string>
 </resources>

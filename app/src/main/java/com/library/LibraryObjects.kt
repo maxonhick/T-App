@@ -6,7 +6,8 @@ abstract class LibraryObjects(
     val objectId: Int,
     var access: Boolean,
     val name: String,
-    val objectType: TypeLibraryObjects
+    val objectType: TypeLibraryObjects,
+    val createdAt: Long = System.currentTimeMillis()
 ): Returnable, Parcelable{
     fun smallInformation(){
         if (access){

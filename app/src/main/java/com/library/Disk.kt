@@ -8,15 +8,17 @@ class Disk(
     access: Boolean,
     name: String,
     val type: DiskType,
-    objectType: TypeLibraryObjects
-): LibraryObjects(objectId, access, name, objectType), Homeable, Parcelable {
+    objectType: TypeLibraryObjects,
+    createdAt: Long = System.currentTimeMillis()
+): LibraryObjects(objectId, access, name, objectType, createdAt), Homeable, Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readByte() != 0.toByte(),
         parcel.readString() ?: "",
         DiskType.valueOf(parcel.readString() ?: "CD"),
-        TypeLibraryObjects.valueOf(parcel.readString() ?: "DISK")
+        TypeLibraryObjects.valueOf(parcel.readString() ?: "DISK"),
+        parcel.readLong()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -25,6 +27,7 @@ class Disk(
         parcel.writeString(name)
         parcel.writeString(type.name)
         parcel.writeString(objectType.name)
+        parcel.writeLong(createdAt)
     }
 
     override fun describeContents(): Int = 0
