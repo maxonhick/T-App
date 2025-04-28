@@ -1,6 +1,7 @@
 package com.library.activity
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -17,7 +18,7 @@ import com.library.data.NewspaperEntity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class LibraryViewModel(application: Application) : AndroidViewModel(application) {
+class LibraryViewModel(private val application: Application) : AndroidViewModel(application) {
     private val database = LibraryDatabase.getDatabase(application)
     private val dao = database.libraryDao()
 
@@ -34,6 +35,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private var currentLimit = 20
 
     init {
+        loadTypeOfSort()
         loadInitialData()
     }
 
@@ -206,6 +208,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun setSortByName(sortByName: Boolean) {
         _sortByName.value = sortByName
+        saveTypeOfSort()
         loadInitialData()
     }
 
@@ -214,7 +217,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun loadItems(limit: Int, offset: Int): List<LibraryObjects> {
-        val sortByName = _sortByName.value ?: true // безопасное получение значения
+        val sortByName = _sortByName.value!!
 
         return try {
             // Получаем базовую информацию о всех элементах
@@ -233,6 +236,20 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             _screenState.value = ScreenState.Error("Ошибка загрузки: ${e.message}")
             emptyList()
         }
+    }
+
+    fun saveTypeOfSort() {
+        val sharedPref = application.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+
+        with(sharedPref.edit()) {
+            putBoolean("TypeSort", _sortByName.value!!)
+            apply()
+        }
+    }
+
+    private fun loadTypeOfSort() {
+        val sharedPref = application.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        _sortByName.value = sharedPref.getBoolean("TypeSort", true)
     }
 
     // Extension functions for conversion
