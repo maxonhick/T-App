@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    kotlin("kapt") // Добавили плагин kapt
+    kotlin("kapt")
 }
 
 android {
@@ -65,7 +65,7 @@ dependencies {
     val roomVersion = "2.7.0"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    kapt("androidx.room:room-compiler:$roomVersion") // Используем ksp вместо kapt
+    kapt("androidx.room:room-compiler:$roomVersion")
 
     // Lifecycle components
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")

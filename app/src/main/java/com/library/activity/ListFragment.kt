@@ -51,14 +51,6 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         super.onCreate(savedInstanceState)
         binding = FragmentListBinding.inflate(layoutInflater)
         shimmerView = binding.shimmerViewContainer
-
-        setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
-            val newItem = bundle.getParcelable<LibraryObjects>(requestKey)
-            newItem?.let {
-                viewModel.addNewItem(it)
-            }
-            closeListener?.closeDetailFragment()
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -68,6 +60,15 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         setupRecyclerView()
         setupClickListeners()
+
+        setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
+            val newItem = bundle.getParcelable<LibraryObjects>(requestKey)
+            newItem?.let {
+                viewModel.addNewItem(it)
+            }
+            closeListener?.closeDetailFragment()
+        }
+
         viewModel.screenState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is ScreenState.Loading -> showLoadingState()
@@ -89,8 +90,6 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         viewModel.sortByName.observe(viewLifecycleOwner) { sortByName ->
             updateSortButtons(sortByName)
         }
-
-        binding.recyclerView.adapter = adapter
     }
 
     private fun setupRecyclerView() {
@@ -100,7 +99,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = this.adapter
+            adapter = this@ListFragment.adapter
             addOnScrollListener(createScrollListener())
         }
     }
@@ -112,16 +111,10 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             val layoutManager = recyclerView.layoutManager as LinearLayoutManager
             val firstVisible = layoutManager.findFirstVisibleItemPosition()
             val lastVisible = layoutManager.findLastVisibleItemPosition()
-            val totalItems = layoutManager.itemCount
 
             when (val state = viewModel.screenState.value) {
                 is ScreenState.Content -> {
-                    if (firstVisible <= 10 && state.canLoadPrevious) {
-                        viewModel.loadPreviousItems()
-                    }
-                    if (lastVisible >= totalItems - 10 && state.canLoadMore) {
-                        viewModel.loadMoreItems()
-                    }
+                    viewModel.reloadItemsInMemory(firstVisible, lastVisible, state)
                 }
                 else -> {}
             }

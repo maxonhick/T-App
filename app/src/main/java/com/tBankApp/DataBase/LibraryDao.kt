@@ -61,4 +61,9 @@ interface LibraryDao {
 
     @Query("SELECT * FROM newspapers WHERE objectId = :id")
     suspend fun getNewspaperById(id: Int): NewspaperEntity?
+
+    @Query("""
+        SELECT (SELECT COUNT(*) FROM books) + (SELECT COUNT(*) FROM disks) + (SELECT COUNT(*) FROM newspapers)
+        """)
+    suspend fun getTotalCount(): Int
 }

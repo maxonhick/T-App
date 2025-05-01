@@ -32,7 +32,7 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
     val sortByName: LiveData<Boolean> = _sortByName
 
     private var currentOffset = 0
-    private var currentLimit = 20
+    private var currentLimit = 30
 
     init {
         loadTypeOfSort()
@@ -55,7 +55,7 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
                 _items.value = libraryObjects
                 _screenState.value = ScreenState.Content(
                     items = libraryObjects,
-                    canLoadMore = _items.value?.size == currentLimit,
+                    canLoadMore = currentLimit + currentOffset < dao.getTotalCount(),
                     canLoadPrevious = currentOffset > 0
                 )
             } catch (e: Exception) {
@@ -67,14 +67,32 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
         }
     }
 
-    fun loadMoreItems() {
-        if (_paginationState.value?.isLoadingMore == true) return
+    fun reloadItemsInMemory(firstVisible: Int, lastVisible: Int, state: ScreenState.Content) {
+        if (firstVisible - 1 < currentOffset + currentLimit / 3 && state.canLoadPrevious) {
+            _paginationState.value = ScreenState.PaginationState(
+                isLoadingPrevious = false,
+                isLoadingMore = true
+            )
+            loadPreviousItems()
+        }
+        if (lastVisible > currentOffset + currentLimit / 3 * 2 && state.canLoadMore) {
+            _paginationState.value = ScreenState.PaginationState(
+                isLoadingPrevious = true,
+                isLoadingMore = false
+            )
+            loadMoreItems()
+        }
+    }
 
+    private fun loadMoreItems() {
+        if (_paginationState.value?.isLoadingMore == true) return
         viewModelScope.launch {
             try {
-                _paginationState.value = ScreenState.PaginationState(isLoadingMore = true)
-
-                val newOffset = currentOffset + currentLimit
+                if (dao.getTotalCount() - currentOffset + currentLimit < currentLimit / 2) {
+                    currentOffset = dao.getTotalCount() - currentOffset + currentLimit
+                } else {
+                    currentOffset += currentLimit / 2
+                }
                 val items = loadItems(currentLimit, currentOffset)
 
                 if (items.isEmpty()) {
@@ -82,23 +100,16 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
                     return@launch
                 }
 
-                val currentItems = _items.value?.toMutableList() ?: mutableListOf()
-                val itemsToRemove = minOf(currentLimit / 2, currentItems.size)
-
-                if (itemsToRemove > 0) {
-                    currentItems.subList(0, itemsToRemove).clear()
-                }
-
-                currentOffset = newOffset
-                _items.value = currentItems
+                _items.value = items
                 _screenState.value = ScreenState.Content(
-                    items = currentItems,
-                    canLoadMore = items.size == currentLimit / 2,
-                    canLoadPrevious = true
+                    items = items,
+                    canLoadMore = currentLimit + currentOffset < dao.getTotalCount(),
+                    canLoadPrevious = currentOffset > 0
                 )
             } catch (e: Exception) {
                 _paginationState.value = ScreenState.PaginationState(
                     isLoadingMore = false,
+                    isLoadingPrevious = false,
                     error = e.message
                 )
             } finally {
@@ -107,17 +118,14 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
         }
     }
 
-    fun loadPreviousItems() {
+    private fun loadPreviousItems() {
         if (_paginationState.value?.isLoadingPrevious == true) return
-
         viewModelScope.launch {
             try {
-                _paginationState.value = ScreenState.PaginationState(isLoadingPrevious = true)
-
-                val newOffset = maxOf(0, currentOffset - currentLimit / 2)
-                if (newOffset == currentOffset) {
-                    _paginationState.value = ScreenState.PaginationState(isLoadingPrevious = false)
-                    return@launch
+                if (currentOffset < currentLimit / 2) {
+                    currentOffset = 0
+                } else {
+                    currentOffset -= currentLimit / 2
                 }
 
                 val items = loadItems(currentLimit, currentOffset)
@@ -127,31 +135,16 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
                     return@launch
                 }
 
-                val currentItems = _items.value?.toMutableList() ?: mutableListOf()
-                val itemsToRemove = minOf(currentLimit / 2, currentItems.size)
-
-                if (itemsToRemove > 0) {
-                    currentItems.subList(currentItems.size - itemsToRemove, currentItems.size).clear()
-                }
-
-                items.reversed().forEach { item ->
-                    when (item) {
-                        is Book -> dao.getBookById(item.objectId)?.let { currentItems.add(0, it.toBook()) }
-                        is Disk -> dao.getDiskById(item.objectId)?.let { currentItems.add(0, it.toDisk()) }
-                        is Newspaper -> dao.getNewspaperById(item.objectId)?.let { currentItems.add(0, it.toNewspaper()) }
-                    }
-                }
-
-                currentOffset = newOffset
-                _items.value = currentItems
+                _items.value = items
                 _screenState.value = ScreenState.Content(
-                    items = currentItems,
-                    canLoadMore = true,
-                    canLoadPrevious = newOffset > 0
+                    items = items,
+                    canLoadMore = currentLimit + currentOffset < dao.getTotalCount(),
+                    canLoadPrevious = currentOffset > 0
                 )
             } catch (e: Exception) {
                 _paginationState.value = ScreenState.PaginationState(
                     isLoadingPrevious = false,
+                    isLoadingMore = false,
                     error = e.message
                 )
             } finally {
@@ -163,7 +156,7 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
     fun addNewItem(item: LibraryObjects) {
         viewModelScope.launch {
             try {
-                val currentItems = _items.value?.toMutableList() ?: mutableListOf()
+                var currentItems = _items.value?.toMutableList() ?: mutableListOf()
 
                 _screenState.value = ScreenState.AddingItem(currentItems, 0f)
 
@@ -177,19 +170,18 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
                     is Book -> {
                         val entity = item.toBookEntity()
                         dao.insertBook(entity)
-                        currentItems.add(item)
                     }
                     is Disk -> {
                         val entity = item.toDiskEntity()
                         dao.insertDisk(entity)
-                        currentItems.add(item)
                     }
                     is Newspaper -> {
                         val entity = item.toNewspaperEntity()
                         dao.insertNewspaper(entity)
-                        currentItems.add(item)
                     }
                 }
+
+                currentItems = loadItems(currentLimit, currentOffset).toMutableList()
 
                 _items.value = currentItems
                 _screenState.value = ScreenState.Content(
@@ -238,7 +230,7 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
         }
     }
 
-    fun saveTypeOfSort() {
+    private fun saveTypeOfSort() {
         val sharedPref = application.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
 
         with(sharedPref.edit()) {
