@@ -182,19 +182,8 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     }
 
     private fun canAddNewItem(): Boolean {
-        return when (val state = viewModel.screenState.value) {
-            is ScreenState.Content -> {
-                if (state.items.any { it.access } or state.items.isEmpty()) {
-                    true
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Достигнут лимит доступных объектов",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    false
-                }
-            }
+        return when (viewModel.screenState.value) {
+            is ScreenState.Content -> true
             is ScreenState.AddingItem -> {
                 Toast.makeText(
                     requireContext(),
@@ -215,8 +204,8 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     }
 
     private fun getNextAvailableId(): Int {
-        return when (val state = viewModel.screenState.value) {
-            is ScreenState.Content -> (state.items.maxOfOrNull { it.objectId } ?: 0) + 1
+        return when (viewModel.screenState.value) {
+            is ScreenState.Content -> viewModel.totalSize + 1
             else -> 1
         }
     }
@@ -281,7 +270,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             buttonContainer.visibility = View.VISIBLE
             addProgressBar.visibility = View.GONE
 
-            adapter.submitList(state.items)
+            adapter.submitList(viewModel.items.value)
 
             // Настройка видимости кнопок
             loadMoreProgress.visibility = if (state.canLoadMore) View.VISIBLE else View.GONE

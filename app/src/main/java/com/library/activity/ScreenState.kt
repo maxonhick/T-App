@@ -8,9 +8,8 @@ sealed class ScreenState {
     }
 
     data class Content(
-        val items: List<LibraryObjects>,
-        val canLoadMore: Boolean = true,
-        val canLoadPrevious: Boolean = true
+        val canLoadMore: Boolean = false,
+        val canLoadPrevious: Boolean = false
     ) : ScreenState()
 
     data class AddingItem(
