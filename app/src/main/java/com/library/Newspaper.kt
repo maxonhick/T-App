@@ -9,8 +9,9 @@ class Newspaper(
     name: String,
     val releaseNumber: Int,
     val month: Month,
-    objectType: TypeLibraryObjects
-): LibraryObjects(objectId, access, name, objectType), Readable, Parcelable {
+    objectType: TypeLibraryObjects,
+    createdAt: Long = System.currentTimeMillis()
+): LibraryObjects(objectId, access, name, objectType, createdAt), Readable, Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
@@ -18,7 +19,8 @@ class Newspaper(
         parcel.readString() ?: "",
         parcel.readInt(),
         Month.valueOf(parcel.readString() ?: "JANUARY"),
-        TypeLibraryObjects.valueOf(parcel.readString() ?: "NEWSPAPER")
+        TypeLibraryObjects.valueOf(parcel.readString() ?: "NEWSPAPER"),
+        parcel.readLong()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -28,6 +30,7 @@ class Newspaper(
         parcel.writeInt(releaseNumber)
         parcel.writeString(month.name)
         parcel.writeString(objectType.name)
+        parcel.writeLong(createdAt)
     }
 
     override fun describeContents(): Int = 0

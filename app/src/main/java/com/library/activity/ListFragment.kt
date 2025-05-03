@@ -1,16 +1,21 @@
 package com.library.activity
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.library.Book
 import com.library.Disk
 import com.library.DiskType
+import com.library.LibraryObjects
 import com.library.Month
 import com.library.Newspaper
 import com.library.R
@@ -46,11 +51,6 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         super.onCreate(savedInstanceState)
         binding = FragmentListBinding.inflate(layoutInflater)
         shimmerView = binding.shimmerViewContainer
-
-        setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
-            viewModel.addNewItem(bundle.getParcelable(requestKey)!!)
-            closeListener?.closeDetailFragment()
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -60,50 +60,36 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         setupRecyclerView()
         setupClickListeners()
+
+        setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
+            val newItem = bundle.getParcelable<LibraryObjects>(requestKey)
+            newItem?.let {
+                viewModel.addNewItem(it)
+            }
+            closeListener?.closeDetailFragment()
+        }
+
         viewModel.screenState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ScreenState.Loading -> with(binding) {
-                    shimmerViewContainer.visibility = View.VISIBLE
-                    shimmerViewContainer.startShimmer()
-                    recyclerView.visibility = View.GONE
-                    errorContainer.visibility = View.GONE
-                    buttonContainer.visibility = View.GONE
-                    addProgressBar.visibility = View.GONE
-                }
-                is ScreenState.Content -> with(binding) {
-                    shimmerViewContainer.stopShimmer()
-                    shimmerViewContainer.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
-                    errorContainer.visibility = View.GONE
-                    buttonContainer.visibility = View.VISIBLE
-                    addProgressBar.visibility = View.GONE
-
-                    adapter.submitList(state.items)
-                }
-                is ScreenState.Error -> with(binding) {
-                    shimmerViewContainer.stopShimmer()
-                    shimmerViewContainer.visibility = View.GONE
-                    recyclerView.visibility = View.GONE
-                    errorContainer.visibility = View.VISIBLE
-                    buttonContainer.visibility = View.GONE
-                    addProgressBar.visibility = View.GONE
-
-                    errorMessage.text = state.message
-                }
-                is ScreenState.AddingItem -> with(binding) {
-                    adapter.submitList(state.currentItems)
-
-                    addProgressBar.visibility = View.VISIBLE
-                    buttonContainer.visibility = View.GONE
-
-                    shimmerViewContainer.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
-                    errorContainer.visibility = View.GONE
-                }
+                is ScreenState.Loading -> showLoadingState()
+                is ScreenState.Content -> showContentState(state)
+                is ScreenState.Error -> showErrorState(state)
+                is ScreenState.Empty -> showEmptyState()
+                is ScreenState.AddingItem -> showAddingState(state)
+                is ScreenState.PaginationState -> updatePaginationState(state)
             }
         }
 
-        binding.recyclerView.adapter = adapter
+        viewModel.paginationState.observe(viewLifecycleOwner) { state ->
+            binding.loadMoreProgress.visibility =
+                if (state.isLoadingMore) View.VISIBLE else View.GONE
+            binding.loadPreviousProgress.visibility =
+                if (state.isLoadingPrevious) View.VISIBLE else View.GONE
+        }
+
+        viewModel.sortByName.observe(viewLifecycleOwner) { sortByName ->
+            updateSortButtons(sortByName)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -113,7 +99,25 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = this.adapter
+            adapter = this@ListFragment.adapter
+            addOnScrollListener(createScrollListener())
+        }
+    }
+
+    private fun createScrollListener() = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+            val firstVisible = layoutManager.findFirstVisibleItemPosition()
+            val lastVisible = layoutManager.findLastVisibleItemPosition()
+
+            when (val state = viewModel.screenState.value) {
+                is ScreenState.Content -> {
+                    viewModel.reloadItemsInMemory(firstVisible, lastVisible, state)
+                }
+                else -> {}
+            }
         }
     }
 
@@ -123,40 +127,103 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         }
 
         binding.addBook.setOnClickListener {
-            if (viewModel.screenState.value !is ScreenState.AddingItem) {
-                val nextId = (viewModel.screenState.value as? ScreenState.Content)?.items?.size?.plus(1) ?: 1
-                val newBook = Book(nextId, false, "", TypeLibraryObjects.Book, 0, "")
-                openDetailListener?.showDetail(
-                    newBook,
-                    true
+            if (canAddNewItem()) {
+                val nextId = getNextAvailableId()
+                val newBook = Book(
+                    objectId = nextId,
+                    access = false,
+                    name = "",
+                    objectType = TypeLibraryObjects.Book,
+                    pages = 0,
+                    author = ""
                 )
+                (activity as? OpenDetailFragment)?.showDetail(newBook, true)
             }
         }
 
         binding.addDisk.setOnClickListener {
-            if (viewModel.screenState.value !is ScreenState.AddingItem) {
-                val nextId =
-                    (viewModel.screenState.value as? ScreenState.Content)?.items?.size?.plus(1) ?: 1
-                val newDisk = Disk(nextId, false, "", DiskType.CD, TypeLibraryObjects.Disk)
-                openDetailListener?.showDetail(
-                    newDisk,
-                    true
+            if (canAddNewItem()) {
+                val nextId = getNextAvailableId()
+                val newDisk = Disk(
+                    objectId = nextId,
+                    access = false,
+                    name = "",
+                    type = DiskType.CD,
+                    objectType = TypeLibraryObjects.Disk
                 )
+                (activity as? OpenDetailFragment)?.showDetail(newDisk, true)
             }
         }
 
         binding.addNewspaper.setOnClickListener {
-            if (viewModel.screenState.value !is ScreenState.AddingItem) {
-                val nextId =
-                    (viewModel.screenState.value as? ScreenState.Content)?.items?.size?.plus(1) ?: 1
-                val newNewspaper =
-                    Newspaper(nextId, false, "", 0, Month.July, TypeLibraryObjects.Newspaper)
-                openDetailListener?.showDetail(
-                    newNewspaper,
-                    true
+            if (canAddNewItem()) {
+                val nextId = getNextAvailableId()
+                val newNewspaper = Newspaper(
+                    objectId = nextId,
+                    access = false,
+                    name = "",
+                    releaseNumber = 0,
+                    month = Month.January,
+                    objectType = TypeLibraryObjects.Newspaper
                 )
+                (activity as? OpenDetailFragment)?.showDetail(newNewspaper, true)
             }
         }
+
+        binding.sortByName.setOnClickListener {
+            viewModel.setSortByName(true)
+            scrollToTop()
+        }
+
+        binding.sortByDate.setOnClickListener {
+            viewModel.setSortByName(false)
+            scrollToTop()
+        }
+    }
+
+    private fun canAddNewItem(): Boolean {
+        return when (viewModel.screenState.value) {
+            is ScreenState.Content -> true
+            is ScreenState.AddingItem -> {
+                Toast.makeText(
+                    requireContext(),
+                    "Дождитесь окончания добавления текущего объекта",
+                    Toast.LENGTH_SHORT
+                ).show()
+                false
+            }
+            else -> {
+                Toast.makeText(
+                    requireContext(),
+                    "Невозможно добавить объект в текущем состоянии",
+                    Toast.LENGTH_SHORT
+                ).show()
+                false
+            }
+        }
+    }
+
+    private fun getNextAvailableId(): Int {
+        return when (viewModel.screenState.value) {
+            is ScreenState.Content -> viewModel.totalSize + 1
+            else -> 1
+        }
+    }
+
+    private fun updateSortButtons(sortByName: Boolean) {
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.purple_500)
+        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.gray_shimmer)
+
+        binding.sortByName.backgroundTintList = ColorStateList.valueOf(
+            if (sortByName) activeColor else inactiveColor
+        )
+        binding.sortByDate.backgroundTintList = ColorStateList.valueOf(
+            if (!sortByName) activeColor else inactiveColor
+        )
+    }
+
+    private fun scrollToTop() {
+        binding.recyclerView.layoutManager?.scrollToPosition(0)
     }
 
     override fun onPause() {
@@ -179,4 +246,117 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             }
         }
     }
+
+    private fun showLoadingState() {
+        with(binding) {
+            shimmerViewContainer.visibility = View.VISIBLE
+            shimmerViewContainer.startShimmer()
+            recyclerView.visibility = View.GONE
+            errorContainer.visibility = View.GONE
+            emptyState.visibility = View.GONE
+            buttonContainer.visibility = View.GONE
+            loadMoreProgress.visibility = View.GONE
+            loadPreviousProgress.visibility = View.GONE
+        }
+    }
+
+    private fun showContentState(state: ScreenState.Content) {
+        with(binding) {
+            shimmerViewContainer.stopShimmer()
+            shimmerViewContainer.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+            errorContainer.visibility = View.GONE
+            emptyState.visibility = View.GONE
+            buttonContainer.visibility = View.VISIBLE
+            addProgressBar.visibility = View.GONE
+
+            adapter.submitList(viewModel.items.value)
+
+            // Настройка видимости кнопок
+            loadMoreProgress.visibility = if (state.canLoadMore) View.VISIBLE else View.GONE
+            loadPreviousProgress.visibility = if (state.canLoadPrevious) View.VISIBLE else View.GONE
+
+            addBook.isEnabled = true
+            addDisk.isEnabled = true
+            addNewspaper.isEnabled = true
+        }
+    }
+
+    private fun showErrorState(state: ScreenState.Error) {
+        with(binding) {
+            shimmerViewContainer.stopShimmer()
+            shimmerViewContainer.visibility = View.GONE
+            recyclerView.visibility = View.GONE
+            emptyState.visibility = View.GONE
+            buttonContainer.visibility = View.GONE
+            errorContainer.visibility = View.VISIBLE
+
+            errorMessage.text = state.message
+
+            retryButton.setOnClickListener {
+                state.retryAction?.invoke()
+            }
+        }
+    }
+
+    private fun showEmptyState() {
+        with(binding) {
+            shimmerViewContainer.stopShimmer()
+            shimmerViewContainer.visibility = View.GONE
+            recyclerView.visibility = View.GONE
+            errorContainer.visibility = View.GONE
+            buttonContainer.visibility = View.VISIBLE
+            emptyState.visibility = View.VISIBLE
+
+            emptyMessage.text = ScreenState.Empty.emptyMessage
+
+            // Включаем кнопки добавления, так как список пуст
+            addBook.isEnabled = true
+            addDisk.isEnabled = true
+            addNewspaper.isEnabled = true
+        }
+    }
+
+    private fun showAddingState(state: ScreenState.AddingItem) {
+        with(binding) {
+            shimmerViewContainer.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+            errorContainer.visibility = View.GONE
+            emptyState.visibility = View.GONE
+
+            // Отображаем текущий прогресс добавления
+            addProgressBar.visibility = View.VISIBLE
+            addProgressBar.progress = (state.progress * 100).toInt()
+
+            // Блокируем кнопки во время добавления
+            buttonContainer.visibility = View.VISIBLE
+            addBook.isEnabled = false
+            addDisk.isEnabled = false
+            addNewspaper.isEnabled = false
+
+            adapter.submitList(state.currentItems)
+        }
+    }
+
+    private fun updatePaginationState(state: ScreenState.PaginationState) {
+        with(binding) {
+            if (state.isLoadingMore) {
+                loadMoreProgress.visibility = View.VISIBLE
+            } else {
+                loadMoreProgress.visibility = View.GONE
+            }
+
+            if (state.isLoadingPrevious) {
+                loadPreviousProgress.visibility = View.VISIBLE
+            } else {
+                loadPreviousProgress.visibility = View.GONE
+            }
+
+            // Показываем ошибку пагинации, если есть
+            state.error?.let {
+                Toast.makeText(context, "Ошибка загрузки: $it", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 }

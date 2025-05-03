@@ -1,29 +1,44 @@
 package com.library.activity
 
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.library.Book
 import com.library.Disk
-import com.library.DiskType
 import com.library.LibraryObjects
-import com.library.Month
 import com.library.Newspaper
 import com.library.TypeLibraryObjects
+import com.library.data.BookEntity
+import com.library.data.DiskEntity
+import com.library.data.LibraryDatabase
+import com.library.data.NewspaperEntity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
-class LibraryViewModel : ViewModel(){
+class LibraryViewModel(private val application: Application) : AndroidViewModel(application) {
+    private val database = LibraryDatabase.getDatabase(application)
+    private val dao = database.libraryDao()
+
     private val _items = MutableLiveData<List<LibraryObjects>>(emptyList())
     private val _screenState = MutableLiveData<ScreenState>(ScreenState.Loading)
+    private val _paginationState = MutableLiveData<ScreenState.PaginationState>()
+    private var _totalSize = 0
+    private val _sortByName = MutableLiveData<Boolean>(true)
 
-    val items: LiveData<List<LibraryObjects>> = _items
     val screenState: LiveData<ScreenState> = _screenState
-    private var currentItems: List<LibraryObjects> = emptyList()
+    val paginationState: LiveData<ScreenState.PaginationState> = _paginationState
+    val sortByName: LiveData<Boolean> = _sortByName
+    val totalSize = _totalSize
+    val items: LiveData<List<LibraryObjects>> = _items
+
+    private var currentOffset = 0
+    private var currentLimit = 30
 
     init {
+        loadTypeOfSort()
         loadInitialData()
     }
 
@@ -31,146 +46,262 @@ class LibraryViewModel : ViewModel(){
         viewModelScope.launch {
             try {
                 _screenState.value = ScreenState.Loading
+                val startTime = System.currentTimeMillis()
 
-                delay(Random.nextLong(1000, 2000))
+                val libraryObjects = loadItems(currentLimit, currentOffset)
 
-                if (Random.nextInt(5) == 0) {
-                    throw Exception("Ошибка загрузки данных")
+                val elapsed = System.currentTimeMillis() - startTime
+                if (elapsed < ScreenState.Loading.minimumShowTime) {
+                    delay(ScreenState.Loading.minimumShowTime - elapsed)
                 }
 
-                currentItems = loadLibraryItems()
-                _screenState.value = ScreenState.Content(currentItems)
+                _items.value = libraryObjects
+                _totalSize = dao.getTotalCount()
+                _screenState.value = ScreenState.Content(
+                    canLoadMore = currentLimit + currentOffset < _totalSize,
+                    canLoadPrevious = currentOffset > 0
+                )
             } catch (e: Exception) {
-                _screenState.value = ScreenState.Error(e.message ?: "Неизвестная ошибка")
+                _screenState.value = ScreenState.Error(
+                    message = e.message ?: "Неизвестная ошибка",
+                    retryAction = { loadInitialData() }
+                )
             }
         }
+    }
+
+    fun reloadItemsInMemory(firstVisible: Int, lastVisible: Int, state: ScreenState.Content) {
+        if ((firstVisible < (currentLimit / 3)) && state.canLoadPrevious) {
+            _paginationState.value = ScreenState.PaginationState(
+                isLoadingPrevious = true,
+                isLoadingMore = false
+            )
+            loadPreviousItems()
+        }
+        if ((lastVisible > (currentLimit / 3) * 2) && state.canLoadMore) {
+            _paginationState.value = ScreenState.PaginationState(
+                isLoadingPrevious = false,
+                isLoadingMore = true
+            )
+            loadMoreItems()
+        }
+    }
+
+    private fun loadMoreItems() {
+        if (_paginationState.value?.isLoadingMore == false) return
+        viewModelScope.launch {
+            try {
+                if (_totalSize - (currentOffset + currentLimit) < currentLimit / 2) {
+                    currentOffset = _totalSize - currentLimit
+                } else {
+                    currentOffset += currentLimit / 2
+                }
+                val items = loadItems(currentLimit, currentOffset)
+
+                if (items.isEmpty()) {
+                    _paginationState.value = ScreenState.PaginationState(isLoadingMore = false)
+                    return@launch
+                }
+
+                _items.value = items
+                _totalSize = dao.getTotalCount()
+                _screenState.value = ScreenState.Content(
+                    canLoadMore = currentLimit + currentOffset < _totalSize,
+                    canLoadPrevious = currentOffset > 0
+                )
+            } catch (e: Exception) {
+                _paginationState.value = ScreenState.PaginationState(
+                    isLoadingMore = false,
+                    isLoadingPrevious = false,
+                    error = e.message
+                )
+            } finally {
+                _paginationState.value = ScreenState.PaginationState(isLoadingMore = false)
+            }
+        }
+    }
+
+    private fun loadPreviousItems() {
+        if (_paginationState.value?.isLoadingPrevious == false) return
+        viewModelScope.launch {
+            try {
+                if (currentOffset < currentLimit / 2) {
+                    currentOffset = 0
+                } else {
+                    currentOffset -= (currentLimit / 2)
+                }
+
+                val items = loadItems(currentLimit, currentOffset)
+
+                if (items.isEmpty()) {
+                    _paginationState.value = ScreenState.PaginationState(isLoadingPrevious = false)
+                    return@launch
+                }
+
+                _items.value = items
+                _totalSize = dao.getTotalCount()
+                _screenState.value = ScreenState.Content(
+                    canLoadMore = currentLimit + currentOffset < _totalSize,
+                    canLoadPrevious = currentOffset > 0
+                )
+            } catch (e: Exception) {
+                _paginationState.value = ScreenState.PaginationState(
+                    isLoadingPrevious = false,
+                    isLoadingMore = false,
+                    error = e.message
+                )
+            } finally {
+                _paginationState.value = ScreenState.PaginationState(isLoadingPrevious = false)
+            }
+        }
+    }
+
+    fun addNewItem(item: LibraryObjects) {
+        viewModelScope.launch {
+            try {
+                var currentItems = _items.value?.toMutableList() ?: mutableListOf()
+                _screenState.value = ScreenState.AddingItem(currentItems, 0f)
+
+                // Имитация прогресса сохранения
+                for (progress in 0..100 step 5) {
+                    delay(50)
+                    _screenState.value = ScreenState.AddingItem(currentItems, progress / 100f)
+                }
+
+                when (item) {
+                    is Book -> {
+                        val entity = item.toBookEntity()
+                        dao.insertBook(entity)
+                    }
+                    is Disk -> {
+                        val entity = item.toDiskEntity()
+                        dao.insertDisk(entity)
+                    }
+                    is Newspaper -> {
+                        val entity = item.toNewspaperEntity()
+                        dao.insertNewspaper(entity)
+                    }
+                }
+
+                currentItems = loadItems(currentLimit, currentOffset).toMutableList()
+
+                _items.value = currentItems
+                _totalSize = dao.getTotalCount()
+                _screenState.value = ScreenState.Content(
+                    canLoadMore = currentLimit + currentOffset < _totalSize,
+                    canLoadPrevious = currentOffset > 0
+                )
+            } catch (e: Exception) {
+                _screenState.value = ScreenState.Error(
+                    message = "Ошибка при добавлении: ${e.message}",
+                    retryAction = { addNewItem(item) }
+                )
+            }
+        }
+    }
+
+    fun setSortByName(sortByName: Boolean) {
+        _sortByName.value = sortByName
+        saveTypeOfSort()
+        loadInitialData()
     }
 
     fun retryLoading() {
         loadInitialData()
     }
 
-    private suspend fun loadLibraryItems(): List<LibraryObjects> {
-        return listOf(
-            Book(
-                objectId = 1,
-                access = true,
-                name = "Маугли",
-                pages = 100,
-                author = "Киплинг",
-                objectType = TypeLibraryObjects.Book
-            ).also { delay(Random.nextLong(100, 300)) },
-            Book(
-                objectId = 2,
-                access = true,
-                name = "Чёрный обелиск",
-                pages = 479,
-                author = "Ремарк",
-                objectType = TypeLibraryObjects.Book
-            ).also { delay(Random.nextLong(100, 300)) },
-            Book(
-                objectId = 3, access = true, name = "1984", pages = 400, author = "Оруэл",
-                objectType = TypeLibraryObjects.Book
-            ).also { delay(Random.nextLong(100, 300)) },
-            Book(
-                objectId = 4,
-                access = true,
-                name = "Война и мир",
-                pages = 1472,
-                author = "Толстой",
-                objectType = TypeLibraryObjects.Book
-            ).also { delay(Random.nextLong(100, 300)) },
-            Newspaper(
-                objectId = 5,
-                access = true,
-                name = "WSJ",
-                releaseNumber = 120225,
-                month = Month.January,
-                objectType = TypeLibraryObjects.Newspaper
-            ).also { delay(Random.nextLong(100, 300)) },
-            Newspaper(
-                objectId = 6,
-                access = true,
-                name = "Зеленоград.ru",
-                releaseNumber = 121124,
-                month = Month.March,
-                objectType = TypeLibraryObjects.Newspaper
-            ).also { delay(Random.nextLong(100, 300)) },
-            Newspaper(
-                objectId = 7,
-                access = true,
-                name = "Спорт-Экпресс",
-                releaseNumber = 230125,
-                month = Month.October,
-                objectType = TypeLibraryObjects.Newspaper
-            ).also { delay(Random.nextLong(100, 300)) },
-            Newspaper(
-                objectId = 8,
-                access = true,
-                name = "WSJ",
-                releaseNumber = 200225,
-                month = Month.June,
-                objectType = TypeLibraryObjects.Newspaper
-            ).also { delay(Random.nextLong(100, 300)) },
-            Newspaper(
-                objectId = 9,
-                access = true,
-                name = "Коммерсантъ",
-                releaseNumber = 130325,
-                month = Month.July,
-                objectType = TypeLibraryObjects.Newspaper
-            ).also { delay(Random.nextLong(100, 300)) },
-            Disk(
-                objectId = 10, access = true, name = "Назад в будущее", type = DiskType.DVD,
-                objectType = TypeLibraryObjects.Disk
-            ).also { delay(Random.nextLong(100, 300)) },
-            Disk(
-                objectId = 11, access = true, name = "Довод", type = DiskType.CD,
-                objectType = TypeLibraryObjects.Disk
-            ).also { delay(Random.nextLong(100, 300)) },
-            Disk(
-                objectId = 12, access = true, name = "Дивергент", type = DiskType.CD,
-                objectType = TypeLibraryObjects.Disk
-            ).also { delay(Random.nextLong(100, 300)) },
-            Disk(
-                objectId = 13, access = true, name = "Рио", type = DiskType.DVD,
-                objectType = TypeLibraryObjects.Disk
-            ).also { delay(Random.nextLong(100, 300)) },
-            Disk(
-                objectId = 14, access = true, name = "Люди в чёрном", type = DiskType.DVD,
-                objectType = TypeLibraryObjects.Disk
-            ).also { delay(Random.nextLong(100, 300)) }
-        )
-    }
+    private suspend fun loadItems(limit: Int, offset: Int): List<LibraryObjects> {
+        val sortByName = _sortByName.value!!
 
-    fun addNewItem(item: LibraryObjects) {
-        viewModelScope.launch {
-            val previousState =  when (val state = _screenState.value) {
-                is ScreenState.Content -> state.items
-                is ScreenState.AddingItem -> state.currentItems
-                else -> emptyList()
-            }
-            try {
-                _screenState.value = ScreenState.AddingItem(currentItems)
-                delay(Random.nextLong(500, 1500))
+        return try {
+            // Получаем базовую информацию о всех элементах
+            val items = dao.getLibraryItems(sortByName, limit, offset)
 
-                if (Random.nextInt(5) == 0) {
-                    throw Exception("Ошибка сохранения данных")
-                }
-
-                val newItems = currentItems.toMutableList().apply {
-                    add(item)
-                }
-                currentItems = newItems
-                _screenState.value = ScreenState.Content(newItems)
-            } catch (e: Exception) {
-                _screenState.value = when (val state = _screenState.value) {
-                    is ScreenState.AddingItem -> ScreenState.Content(state.currentItems)
-                    else -> ScreenState.Error(e.message ?: "Ошибка при добавлении")
+            // Загружаем полные данные для каждого элемента
+            items.mapNotNull { item ->
+                when (item.itemType) {
+                    "book" -> dao.getBookById(item.objectId)?.toBook()
+                    "disk" -> dao.getDiskById(item.objectId)?.toDisk()
+                    "newspaper" -> dao.getNewspaperById(item.objectId)?.toNewspaper()
+                    else -> null
                 }
             }
+        } catch (e: Exception) {
+            _screenState.value = ScreenState.Error("Ошибка загрузки: ${e.message}")
+            emptyList()
         }
     }
 
-    fun getSize(): Int = currentItems.size
+    private fun saveTypeOfSort() {
+        val sharedPref = application.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+
+        with(sharedPref.edit()) {
+            putBoolean("TypeSort", _sortByName.value!!)
+            apply()
+        }
+    }
+
+    private fun loadTypeOfSort() {
+        val sharedPref = application.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        _sortByName.value = sharedPref.getBoolean("TypeSort", true)
+    }
+
+    // Extension functions for conversion
+    private fun Book.toBookEntity() = BookEntity(
+        objectId = objectId,
+        name = name,
+        author = author,
+        pages = pages,
+        access = access,
+        createdAt = createdAt,
+        objectType = TypeLibraryObjects.Book
+    )
+
+    private fun BookEntity.toBook() = Book(
+        objectId = objectId,
+        access = access,
+        name = name,
+        objectType = TypeLibraryObjects.Book,
+        pages = pages,
+        author = author,
+        createdAt = createdAt
+    )
+
+    private fun Disk.toDiskEntity() = DiskEntity(
+        objectId = objectId,
+        name = name,
+        type = type,
+        access = access,
+        createdAt = createdAt,
+        objectType = TypeLibraryObjects.Disk
+    )
+
+    private fun DiskEntity.toDisk() = Disk(
+        objectId = objectId,
+        access = access,
+        name = name,
+        type = type,
+        objectType = TypeLibraryObjects.Disk,
+        createdAt = createdAt
+    )
+
+    private fun Newspaper.toNewspaperEntity() = NewspaperEntity(
+        objectId = objectId,
+        name = name,
+        releaseNumber = releaseNumber,
+        month = month,
+        access = access,
+        createdAt = createdAt,
+        objectType = TypeLibraryObjects.Newspaper
+    )
+
+    private fun NewspaperEntity.toNewspaper() = Newspaper(
+        objectId = objectId,
+        access = access,
+        name = name,
+        releaseNumber = releaseNumber,
+        month = month,
+        objectType = TypeLibraryObjects.Newspaper,
+        createdAt = createdAt
+    )
 }

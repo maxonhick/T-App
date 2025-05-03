@@ -1,137 +1,169 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white"
-    android:padding="8dp">
+    android:layout_height="match_parent">
 
+    <!-- Шиммер для состояния загрузки -->
     <com.facebook.shimmer.ShimmerFrameLayout
         android:id="@+id/shimmerViewContainer"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
+        android:layout_height="match_parent"
+        android:visibility="gone">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="8dp">
-
             <include layout="@layout/shimmer_item"/>
             <include layout="@layout/shimmer_item"/>
             <include layout="@layout/shimmer_item"/>
             <include layout="@layout/shimmer_item"/>
             <include layout="@layout/shimmer_item"/>
-
         </LinearLayout>
     </com.facebook.shimmer.ShimmerFrameLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:padding="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:itemCount="7"
-        tools:listitem="@layout/library_item" />
-
+    <!-- Основной контейнер -->
     <LinearLayout
-        android:id="@+id/errorContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="16dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/errorMessage"
-            android:layout_width="wrap_content"
+        <!-- Кнопки сортировки вверху -->
+        <LinearLayout
+            android:id="@+id/sortButtonsContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/error_red"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/retryButton"
-            android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/sortByName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/Sort_by_name"
+                android:backgroundTint="@color/purple_200"/>
+
+            <Button
+                android:id="@+id/sortByDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/Sort_by_data"
+                android:backgroundTint="@color/teal_200"/>
+        </LinearLayout>
+
+        <!-- Прогресс бар для загрузки предыдущих элементов -->
+        <ProgressBar
+            android:id="@+id/loadPreviousProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:visibility="gone"/>
+
+        <!-- Основной контент с весом 1 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <!-- RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="72dp"
+                tools:itemCount="7"
+                tools:listitem="@layout/library_item"/>
+
+            <!-- Прогресс бар для загрузки следующих элементов -->
+            <ProgressBar
+                android:id="@+id/loadMoreProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_gravity="bottom"
+                android:visibility="gone"/>
+
+            <!-- Состояние ошибки -->
+            <LinearLayout
+                android:id="@+id/errorContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/errorMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+
+                <Button
+                    android:id="@+id/retryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/Retry"/>
+            </LinearLayout>
+
+            <!-- Пустое состояние -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/emptyMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Кнопки добавления внизу -->
+        <LinearLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Повторить попытку"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <Button
+                android:id="@+id/addBook"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/add_book"/>
+
+            <Button
+                android:id="@+id/addDisk"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/add_disk"/>
+
+            <Button
+                android:id="@+id/addNewspaper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/add_newspaper"/>
+        </LinearLayout>
+
+        <!-- Прогресс бар при добавлении нового элемента -->
+        <ProgressBar
+            android:id="@+id/addProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:visibility="gone"/>
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/buttonContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <Button
-            android:id="@+id/addBook"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@color/purple_200"
-            android:text="@string/add_book"
-            android:textColor="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <Button
-            android:id="@+id/addDisk"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginStart="12dp"
-            android:background="@color/purple_200"
-            android:text="@string/add_disk"
-            android:textColor="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/addNewspaper"
-            app:layout_constraintHorizontal_bias="0.366"
-            app:layout_constraintStart_toEndOf="@+id/addBook" />
-
-        <Button
-            android:id="@+id/addNewspaper"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginStart="12dp"
-            android:background="@color/purple_200"
-            android:text="@string/add_newspaper"
-            android:textColor="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-    </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/addProgressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

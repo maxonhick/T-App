@@ -1,13 +1,14 @@
 package com.library.activity
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
-class ViewModelFactory : ViewModelProvider.Factory {
+class ViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(LibraryViewModel::class.java) -> LibraryViewModel() as T
-            else -> throw IllegalArgumentException("Такой модельки нет")
+        if (modelClass.isAssignableFrom(LibraryViewModel::class.java)) {
+            return LibraryViewModel(application) as T
         }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

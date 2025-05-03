@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    kotlin("kapt")
 }
 
 android {
@@ -42,7 +43,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -52,12 +52,23 @@ dependencies {
 
     // Navigation
     val version_of_navigation = "2.5.3"
-    implementation("androidx.navigation:navigation-fragment-ktx:${version_of_navigation}")
-    implementation("androidx.navigation:navigation-ui-ktx:${version_of_navigation}")
+    implementation("androidx.navigation:navigation-fragment-ktx:$version_of_navigation")
+    implementation("androidx.navigation:navigation-ui-ktx:$version_of_navigation")
 
     // Fragments
     val version_of_fragments = "1.8.6"
-    implementation("androidx.fragment:fragment-ktx:${version_of_fragments}")
+    implementation("androidx.fragment:fragment-ktx:$version_of_fragments")
 
     implementation("com.facebook.shimmer:shimmer:0.5.0")
+
+    // Room components
+    val roomVersion = "2.7.0"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+
+    // Lifecycle components
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 }
