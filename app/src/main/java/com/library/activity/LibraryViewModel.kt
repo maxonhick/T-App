@@ -2,6 +2,7 @@ package com.library.activity
 
 import android.app.Application
 import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,6 +16,8 @@ import com.library.data.BookEntity
 import com.library.data.DiskEntity
 import com.library.data.LibraryDatabase
 import com.library.data.NewspaperEntity
+import com.tBankApp.model.Volume
+import com.tBankApp.network.ApiClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -27,12 +30,18 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
     private val _paginationState = MutableLiveData<ScreenState.PaginationState>()
     private var _totalSize = 0
     private val _sortByName = MutableLiveData<Boolean>(true)
+    private val _googleBooks = MutableLiveData<List<Book>>(emptyList())
+    private val _searchQuery = MutableLiveData<String>("")
+    private val _currentMode = MutableLiveData<LibraryMod>(LibraryMod.LOCAL)
 
     val screenState: LiveData<ScreenState> = _screenState
     val paginationState: LiveData<ScreenState.PaginationState> = _paginationState
     val sortByName: LiveData<Boolean> = _sortByName
     val totalSize = _totalSize
     val items: LiveData<List<LibraryObjects>> = _items
+    val googleBooks: LiveData<List<Book>> = _googleBooks
+    val searchQuery: LiveData<String> = _searchQuery
+    val currentMode: LiveData<LibraryMod> = _currentMode
 
     private var currentOffset = 0
     private var currentLimit = 30
@@ -42,7 +51,7 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
         loadInitialData()
     }
 
-    private fun loadInitialData() {
+    fun loadInitialData() {
         viewModelScope.launch {
             try {
                 _screenState.value = ScreenState.Loading
@@ -244,6 +253,84 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
     private fun loadTypeOfSort() {
         val sharedPref = application.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         _sortByName.value = sharedPref.getBoolean("TypeSort", true)
+    }
+
+    fun searchGoogleBooks(author: String?, title: String?) {
+        viewModelScope.launch {
+            _googleBooks.value = emptyList()
+            _screenState.value = ScreenState.Loading
+
+            try {
+                val query = buildQuery(author, title)
+                val books = ApiClient.googleBooksService.searchBooks(query)
+
+                _googleBooks.value = books.items?.mapNotNull { it.toBook() } ?: emptyList()
+                _screenState.value = if (_googleBooks.value.isNullOrEmpty()) {
+                    ScreenState.Empty
+                } else {
+                    ScreenState.Content(false, false)
+                }
+            } catch (e: Exception) {
+                _screenState.value = ScreenState.Error(
+                    "Ошибка поиска: ${e.message}",
+                    retryAction = { searchGoogleBooks(author, title) }
+                )
+            }
+        }
+    }
+
+    private fun buildQuery(author: String?, title: String?): String {
+        val parts = mutableListOf<String>()
+        author?.takeIf { it.length >= 3 }?.let { parts.add("inauthor:$it") }
+        title?.takeIf { it.length >= 3 }?.let { parts.add("intitle:$it") }
+        return parts.joinToString("+")
+    }
+
+    private fun Volume.toBook(): Book? {
+        val isbn = volumeInfo.industryIdentifiers
+            ?.firstOrNull { it.type == "ISBN_13" || it.type == "ISBN_10" }
+            ?.identifier ?: return null
+
+        return Book(
+            objectId = isbn.hashCode(),
+            name = volumeInfo.title ?: "Без названия",
+            author = volumeInfo.authors?.joinToString() ?: "Неизвестный автор",
+            pages = volumeInfo.pageCount ?: 0,
+            access = true,
+            objectType = TypeLibraryObjects.Book
+        )
+    }
+
+    fun saveGoogleBook(book: Book) {
+        viewModelScope.launch {
+            try {
+                if (dao.getBookById(book.objectId) == null) {
+                    dao.insertBook(book.toBookEntity())
+                    Toast.makeText(application, "Книга сохранена", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(application, "Книга уже есть в библиотеке", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(application, "Ошибка сохранения", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun clearSearchQuery() {
+        _searchQuery.value = ""
+    }
+
+    fun switchToGoogleMode() {
+        _currentMode.value = LibraryMod.GOOGLE
+        _items.value = emptyList()
+        _googleBooks.value = emptyList()
+        _screenState.value = ScreenState.Loading
+    }
+
+    fun switchToLocalMode() {
+        _currentMode.value = LibraryMod.LOCAL
+        _screenState.value = ScreenState.Loading
+        loadInitialData()
     }
 
     // Extension functions for conversion
