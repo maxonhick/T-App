@@ -320,16 +320,25 @@ class LibraryViewModel(private val application: Application) : AndroidViewModel(
         _searchQuery.value = ""
     }
 
+    fun clearGoogleBooks() {
+        _googleBooks.value = emptyList()
+    }
+
+    fun isSearchRequested(): Boolean {
+        return searchQuery.value?.isNotEmpty() == true
+    }
+
     fun switchToGoogleMode() {
         _currentMode.value = LibraryMod.GOOGLE
         _items.value = emptyList()
         _googleBooks.value = emptyList()
-        _screenState.value = ScreenState.Loading
+        _searchQuery.value = ""
     }
 
     fun switchToLocalMode() {
         _currentMode.value = LibraryMod.LOCAL
-        _screenState.value = ScreenState.Loading
+        _googleBooks.value = emptyList()
+        _searchQuery.value = ""
         loadInitialData()
     }
 

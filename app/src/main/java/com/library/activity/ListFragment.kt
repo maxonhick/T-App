@@ -76,12 +76,9 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             when (mode!!) {
                 LibraryMod.LOCAL -> {
                     showLibraryState()
-                    viewModel.loadInitialData()
-                    adapter.submitList(viewModel.items.value)
                 }
                 LibraryMod.GOOGLE -> {
                     showSearchState()
-                    adapter.submitList(viewModel.googleBooks.value)
                 }
             }
             updateAdapter()
@@ -89,7 +86,11 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         viewModel.screenState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ScreenState.Loading -> showLoadingState()
+                is ScreenState.Loading -> {
+                    if (viewModel.currentMode.value == LibraryMod.GOOGLE && viewModel.isSearchRequested()) {
+                        showLoadingState()
+                    }
+                }
                 is ScreenState.Content -> showContentState(state)
                 is ScreenState.Error -> showErrorState(state)
                 is ScreenState.Empty -> showEmptyState()
@@ -130,7 +131,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             val title = binding.etTitle.text.toString()
 
             if (author.length >= 3 || title.length >= 3) {
-                viewModel.switchToGoogleMode()
+                showLoadingState()
                 viewModel.searchGoogleBooks(
                     author.takeIf { it.isNotEmpty() },
                     title.takeIf { it.isNotEmpty() }
@@ -140,6 +141,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.btnShowLibrary.setOnClickListener {
             viewModel.switchToLocalMode()
+            showLibraryState()
         }
 
         validateSearch()
@@ -185,19 +187,34 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     }
 
     private fun showSearchState() {
-        binding.recyclerView.visibility = View.GONE
-        binding.searchPanel.visibility = View.VISIBLE
-        binding.sortByName.visibility = View.GONE
-        binding.sortByDate.visibility = View.GONE
-        binding.buttonContainer.visibility = View.GONE
+        with(binding) {
+            shimmerViewContainer.stopShimmer()
+            shimmerViewContainer.visibility = View.GONE
+            recyclerView.visibility = View.GONE
+            searchPanel.visibility = View.VISIBLE
+            sortByName.visibility = View.GONE
+            sortByDate.visibility = View.GONE
+            buttonContainer.visibility = View.GONE
+            errorContainer.visibility = View.GONE
+            emptyState.visibility = View.GONE
+        }
+
+        // Очищаем предыдущие результаты поиска
+        viewModel.clearGoogleBooks()
+        adapter.submitList(emptyList())
         updateAdapter()
     }
 
     private fun showLibraryState() {
-        binding.searchPanel.visibility = View.GONE
-        binding.sortByName.visibility = View.VISIBLE
-        binding.sortByDate.visibility = View.VISIBLE
-        binding.buttonContainer.visibility = View.VISIBLE
+        with(binding) {
+            searchPanel.visibility = View.GONE
+            sortByName.visibility = View.VISIBLE
+            sortByDate.visibility = View.VISIBLE
+            buttonContainer.visibility = View.VISIBLE
+            shimmerViewContainer.visibility = View.GONE
+        }
+
+        adapter.submitList(viewModel.items.value)
         updateAdapter()
     }
 
@@ -279,13 +296,14 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
         binding.btnShowLibrary.setOnClickListener {
             viewModel.clearSearchQuery()
-            setupRecyclerView()
+            viewModel.switchToLocalMode()
             showLibraryState()
         }
 
         binding.btnShowSearch.setOnClickListener {
-            setupSearchView()
+            viewModel.switchToGoogleMode()
             showSearchState()
+            adapter.submitList(emptyList())
         }
     }
 

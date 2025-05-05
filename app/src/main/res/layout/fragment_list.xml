@@ -3,25 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Шиммер для состояния загрузки -->
-    <com.facebook.shimmer.ShimmerFrameLayout
-        android:id="@+id/shimmerViewContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="8dp">
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-        </LinearLayout>
-    </com.facebook.shimmer.ShimmerFrameLayout>
-
     <!-- Основной контейнер -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -112,6 +93,25 @@
                 android:text="Поиск в Google Books"
                 android:enabled="false"/>
         </LinearLayout>
+
+        <!-- Шиммер для состояния загрузки -->
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmerViewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+            </LinearLayout>
+        </com.facebook.shimmer.ShimmerFrameLayout>
 
         <!-- Основной контент с весом 1 -->
         <FrameLayout
