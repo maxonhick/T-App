@@ -12,7 +12,8 @@ import com.library.databinding.LibraryItemBinding
 import com.tBankApp.recycler.view_holder.LibraryItemViewHolder
 
 class LibraryAdapter (private val onItemClick: (LibraryObjects) -> Unit,
-                      private val onItemLongClick: (Book) -> Unit): ListAdapter<LibraryObjects, LibraryItemViewHolder>(LibraryItemsDiffUtil()) {
+                      private val onItemLongClick: (Book) -> Unit
+): ListAdapter<LibraryObjects, LibraryItemViewHolder>(LibraryItemsDiffUtil()) {
 
     override fun getItemViewType(position: Int): Int {
         val item = currentList[position]

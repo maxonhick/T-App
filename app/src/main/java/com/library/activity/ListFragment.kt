@@ -172,9 +172,9 @@ class ListFragment : Fragment(R.layout.fragment_list) {
                 openDetailListener?.showDetail(item, false)
             },
             onItemLongClick = { book ->
-                if (viewModel.searchQuery.value?.isNotEmpty() == true) {
+                if (viewModel.googleBooks.value?.isNotEmpty() == true) {
                     viewModel.saveGoogleBook(book)
-                    Toast.makeText(requireContext(), "Книгасохранена", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Книга сохранена", Toast.LENGTH_SHORT).show()
                 }
             }
         )
