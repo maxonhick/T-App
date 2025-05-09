@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -50,14 +51,20 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    implementation(libs.retrofit.core)
+    implementation(libs.converter.kotlinx.serialization)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging)
+
     // Navigation
     val version_of_navigation = "2.5.3"
-    implementation("androidx.navigation:navigation-fragment-ktx:$version_of_navigation")
-    implementation("androidx.navigation:navigation-ui-ktx:$version_of_navigation")
+    implementation("androidx.navigation:navigation-fragment-ktx:${version_of_navigation}")
+    implementation("androidx.navigation:navigation-ui-ktx:${version_of_navigation}")
 
     // Fragments
     val version_of_fragments = "1.8.6"
-    implementation("androidx.fragment:fragment-ktx:$version_of_fragments")
+    implementation("androidx.fragment:fragment-ktx:${version_of_fragments}")
 
     implementation("com.facebook.shimmer:shimmer:0.5.0")
 
@@ -71,4 +78,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

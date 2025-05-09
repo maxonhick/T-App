@@ -1,27 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <!-- Шиммер для состояния загрузки -->
-    <com.facebook.shimmer.ShimmerFrameLayout
-        android:id="@+id/shimmerViewContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="8dp">
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-            <include layout="@layout/shimmer_item"/>
-        </LinearLayout>
-    </com.facebook.shimmer.ShimmerFrameLayout>
 
     <!-- Основной контейнер -->
     <LinearLayout
@@ -31,7 +11,6 @@
 
         <!-- Кнопки сортировки вверху -->
         <LinearLayout
-            android:id="@+id/sortButtonsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -52,6 +31,22 @@
                 android:layout_weight="1"
                 android:text="@string/Sort_by_data"
                 android:backgroundTint="@color/teal_200"/>
+
+            <Button
+                android:id="@+id/btnShowLibrary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Библиотека"
+                android:backgroundTint="@color/purple_200"/>
+
+            <Button
+                android:id="@+id/btnShowSearch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Google"
+                android:backgroundTint="@color/purple_200"/>
         </LinearLayout>
 
         <!-- Прогресс бар для загрузки предыдущих элементов -->
@@ -61,6 +56,62 @@
             android:layout_width="match_parent"
             android:layout_height="4dp"
             android:visibility="gone"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:id="@+id/search_panel">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Автор">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etAuthor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Название">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/btnSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Поиск в Google Books"
+                android:enabled="false"/>
+        </LinearLayout>
+
+        <!-- Шиммер для состояния загрузки -->
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmerViewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+                <include layout="@layout/shimmer_item"/>
+            </LinearLayout>
+        </com.facebook.shimmer.ShimmerFrameLayout>
 
         <!-- Основной контент с весом 1 -->
         <FrameLayout
