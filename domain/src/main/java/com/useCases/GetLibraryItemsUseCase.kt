@@ -5,7 +5,7 @@ import com.library.LibraryObjects
 import com.repositories.LibraryRepository
 import javax.inject.Inject
 
-class GetLibraryItemsUseCase @Inject constructor(
+class GetLibraryItemsUseCase(
     private val repository: LibraryRepository,
     private val preferencesManager: PreferencesManager
 ) {

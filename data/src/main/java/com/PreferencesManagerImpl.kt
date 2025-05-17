@@ -6,8 +6,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import androidx.core.content.edit
 
-class PreferencesManagerImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+class PreferencesManagerImpl (
+    private val context: Context
 ) : PreferencesManager {
 
     private val sharedPref by lazy {

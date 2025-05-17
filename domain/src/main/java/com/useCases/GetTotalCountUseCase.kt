@@ -3,7 +3,7 @@ package com.useCases
 import com.repositories.LibraryRepository
 import javax.inject.Inject
 
-class GetTotalCountUseCase @Inject constructor(
+class GetTotalCountUseCase(
     private val repository: LibraryRepository
 ) {
     suspend operator fun invoke(): Result<Int> = try {

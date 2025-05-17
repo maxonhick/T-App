@@ -12,9 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
-@HiltViewModel
-class MainViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+class MainViewModel(
+    private val context: Context
 ) : ViewModel() {
 
     // Состояние

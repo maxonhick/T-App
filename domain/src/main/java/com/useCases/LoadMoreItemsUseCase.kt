@@ -3,9 +3,8 @@ package com.useCases
 import com.library.LibraryObjects
 import javax.inject.Inject
 
-class LoadMoreItemsUseCase @Inject constructor(
-    private val getItemsUseCase: GetLibraryItemsUseCase,
-    private val getTotalCountUseCase: GetTotalCountUseCase
+class LoadMoreItemsUseCase(
+    private val getItemsUseCase: GetLibraryItemsUseCase
 ) {
     suspend operator fun invoke(
         currentOffset: Int,

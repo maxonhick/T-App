@@ -4,7 +4,7 @@ import com.library.Book
 import com.repositories.LibraryRepository
 import javax.inject.Inject
 
-class SearchBooksUseCase @Inject constructor(
+class SearchBooksUseCase(
     private val repository: LibraryRepository
 ) {
     suspend operator fun invoke(query: String): Result<List<Book>> = try {

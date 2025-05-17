@@ -8,11 +8,12 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.DependencyContainer
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.fragments.DetailFragment.Companion.NEW_ITEM
 import com.library.Book
@@ -24,21 +25,20 @@ import com.library.Newspaper
 import com.library.R
 import com.library.TypeLibraryObjects
 import com.interfaces.FragmentCloseListener
-import com.viewModels.LibraryMod
 import com.viewModels.LibraryViewModel
 import com.interfaces.OpenDetailFragment
 import com.ScreenState
 import com.library.LibraryMode
 import com.library.databinding.FragmentListBinding
 import com.viewModels.recycler.LibraryAdapter
-import dagger.hilt.android.AndroidEntryPoint
 
 const val SCROLL_POSITION = "SCROLL_POSITION"
 
-@AndroidEntryPoint
 class ListFragment : Fragment(R.layout.fragment_list) {
     private lateinit var binding: FragmentListBinding
-    private val viewModel: LibraryViewModel by activityViewModels()
+    private val viewModel: LibraryViewModel by viewModels {
+        DependencyContainer.getViewModelFactory(requireContext())
+    }
     private lateinit var adapter: LibraryAdapter
     private var scrollPosition: Int = 0
     private var closeListener: FragmentCloseListener? = null

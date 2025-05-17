@@ -6,6 +6,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
+import com.DependencyContainer
 import com.fragments.DetailFragment
 import com.fragments.DetailFragment.Companion.CURRENT_ITEM
 import com.fragments.DetailFragment.Companion.IS_NEW
@@ -17,13 +18,14 @@ import com.library.LibraryObjects
 import com.library.R
 import com.library.databinding.ActivityMainBinding
 import com.viewModels.MainViewModel
-import dagger.hilt.android.AndroidEntryPoint
+import com.viewModels.ViewModelFactory
 
-@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), FragmentCloseListener, OpenDetailFragment {
 
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels {
+        DependencyContainer.getViewModelFactory(applicationContext)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

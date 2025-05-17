@@ -15,15 +15,12 @@ import com.useCases.SaveBookUseCase
 import com.useCases.SearchBooksUseCase
 import com.useCases.SetSortPreferenceUseCase
 import com.useCases.SwitchModeUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class LibraryViewModel @Inject constructor(
+class LibraryViewModel(
     private val getLibraryItemsUseCase: GetLibraryItemsUseCase,
     private val getTotalCountUseCase: GetTotalCountUseCase,
     private val loadMoreItemsUseCase: LoadMoreItemsUseCase,

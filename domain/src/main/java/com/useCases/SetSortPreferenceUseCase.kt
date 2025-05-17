@@ -3,7 +3,7 @@ package com.useCases
 import com.PreferencesManager
 import javax.inject.Inject
 
-class SetSortPreferenceUseCase @Inject constructor(
+class SetSortPreferenceUseCase(
     private val preferencesManager: PreferencesManager
 ) {
     operator fun invoke(sortByName: Boolean): Result<Boolean> = try {

@@ -17,7 +17,7 @@ import com.mappers.NewspaperMapper
 import com.network.GoogleBooksApiService
 import javax.inject.Inject
 
-class LibraryRepositoryImpl @Inject constructor(
+class LibraryRepositoryImpl(
     private val localDataSource: LibraryDao,
     private val remoteDataSource: GoogleBooksApiService,
     private val bookMapper: BookMapper,

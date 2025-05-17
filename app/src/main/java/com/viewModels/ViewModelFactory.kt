@@ -1,38 +1,33 @@
 package com.viewModels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.DependencyContainer
+import com.library.activity.MainActivity
 import com.useCases.*
 
-class ViewModelFactory(
-    private val getLibraryItemsUseCase: GetLibraryItemsUseCase,
-    private val getTotalCountUseCase: GetTotalCountUseCase,
-    private val loadMoreItemsUseCase: LoadMoreItemsUseCase,
-    private val loadPreviousItemsUseCase: LoadPreviousItemsUseCase,
-    private val addItemUseCase: AddItemUseCase,
-    private val searchBooksUseCase: SearchBooksUseCase,
-    private val saveBookUseCase: SaveBookUseCase,
-    private val setSortPreferenceUseCase: SetSortPreferenceUseCase,
-    private val switchModeUseCase: SwitchModeUseCase
-) : ViewModelProvider.Factory {
+class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
 
-    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
+            modelClass.isAssignableFrom(MainViewModel::class.java) -> {
+                MainViewModel(context) as T
+            }
             modelClass.isAssignableFrom(LibraryViewModel::class.java) -> {
                 LibraryViewModel(
-                    getLibraryItemsUseCase,
-                    getTotalCountUseCase,
-                    loadMoreItemsUseCase,
-                    loadPreviousItemsUseCase,
-                    addItemUseCase,
-                    searchBooksUseCase,
-                    saveBookUseCase,
-                    setSortPreferenceUseCase,
-                    switchModeUseCase
+                    getLibraryItemsUseCase = DependencyContainer.getLibraryItemsUseCase,
+                    getTotalCountUseCase = DependencyContainer.getTotalCountUseCase,
+                    loadMoreItemsUseCase = DependencyContainer.loadMoreItemsUseCase,
+                    loadPreviousItemsUseCase = DependencyContainer.loadPreviousItemsUseCase,
+                    addItemUseCase = DependencyContainer.addItemUseCase,
+                    searchBooksUseCase = DependencyContainer.searchBooksUseCase,
+                    saveBookUseCase = DependencyContainer.saveBookUseCase,
+                    setSortPreferenceUseCase = DependencyContainer.setSortPreferenceUseCase,
+                    switchModeUseCase = DependencyContainer.switchModeUseCase
                 ) as T
             }
-            else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+            else -> throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
         }
     }
 }
