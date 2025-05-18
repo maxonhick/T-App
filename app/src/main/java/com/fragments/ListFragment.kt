@@ -80,7 +80,9 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             bundle.getParcelable<LibraryObjects>(NEW_ITEM)?.let {
                 viewModel.addNewItem(it)
             }
-            closeListener?.closeDetailFragment()
+            if (viewModel.currentMode.value == LibraryMode.LOCAL) {
+                closeListener?.closeDetailFragment()
+            }
         }
 
         binding.recyclerView.post {
@@ -245,7 +247,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
 
     private fun observeViewModel() {
         viewModel.currentMode.asLiveData().observe(viewLifecycleOwner) { mode ->
-            when (mode) {
+            when (mode!!) {
                 LibraryMode.LOCAL -> showLibraryState()
                 LibraryMode.GOOGLE -> showSearchState()
             }

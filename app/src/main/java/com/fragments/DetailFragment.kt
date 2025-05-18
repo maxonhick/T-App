@@ -402,13 +402,6 @@ class DetailFragment : Fragment() {
         if (close) closeListener?.closeDetailFragment()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            closeListener?.closeDetailFragment()
-        }
-    }
-
     companion object {
         const val IS_NEW = "IS_NEW"
         const val BOOK_BUNDLE = "BOOK_BUNDLE"

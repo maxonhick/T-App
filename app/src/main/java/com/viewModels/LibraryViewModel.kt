@@ -8,12 +8,14 @@ import com.library.LibraryMode
 import com.library.LibraryObjects
 import com.useCases.AddItemUseCase
 import com.useCases.GetLibraryItemsUseCase
+import com.useCases.GetLibraryModeUseCase
 import com.useCases.GetSortPreferenceUseCase
 import com.useCases.GetTotalCountUseCase
 import com.useCases.LoadMoreItemsUseCase
 import com.useCases.LoadPreviousItemsUseCase
 import com.useCases.SaveBookUseCase
 import com.useCases.SearchBooksUseCase
+import com.useCases.SetLibraryModeUseCase
 import com.useCases.SetSortPreferenceUseCase
 import com.useCases.SwitchModeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +33,9 @@ class LibraryViewModel(
     private val saveBookUseCase: SaveBookUseCase,
     private val setSortPreferenceUseCase: SetSortPreferenceUseCase,
     private val switchModeUseCase: SwitchModeUseCase,
-    private val getSortPreferenceUseCase: GetSortPreferenceUseCase
+    private val getSortPreferenceUseCase: GetSortPreferenceUseCase,
+    private val setLibraryModeUseCase: SetLibraryModeUseCase,
+    getLibraryModeUseCase: GetLibraryModeUseCase
 ) : ViewModel() {
 
     private val _screenState = MutableStateFlow<ScreenState>(ScreenState.Loading)
@@ -53,6 +57,7 @@ class LibraryViewModel(
     private val currentLimit = 30
 
     init {
+        _currentMode.value = getLibraryModeUseCase().getOrThrow()
         setSortPreference()
         loadInitialData()
     }
@@ -205,6 +210,7 @@ class LibraryViewModel(
             if (result.isSuccess) {
                 _currentMode.value = result.getOrThrow()
                 _googleBooks.value = emptyList()
+                setLibraryModeUseCase(LibraryMode.GOOGLE)
             } else {
                 handleError(result.exceptionOrNull())
             }
@@ -217,6 +223,7 @@ class LibraryViewModel(
             if (result.isSuccess) {
                 _currentMode.value = result.getOrThrow()
                 loadInitialData()
+                setLibraryModeUseCase(LibraryMode.LOCAL)
             } else {
                 handleError(result.exceptionOrNull())
             }

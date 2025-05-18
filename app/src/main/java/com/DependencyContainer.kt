@@ -13,12 +13,14 @@ import com.repositories.LibraryRepository
 import com.repositories.LibraryRepositoryImpl
 import com.useCases.AddItemUseCase
 import com.useCases.GetLibraryItemsUseCase
+import com.useCases.GetLibraryModeUseCase
 import com.useCases.GetSortPreferenceUseCase
 import com.useCases.GetTotalCountUseCase
 import com.useCases.LoadMoreItemsUseCase
 import com.useCases.LoadPreviousItemsUseCase
 import com.useCases.SaveBookUseCase
 import com.useCases.SearchBooksUseCase
+import com.useCases.SetLibraryModeUseCase
 import com.useCases.SetSortPreferenceUseCase
 import com.useCases.SwitchModeUseCase
 import com.viewModels.ViewModelFactory
@@ -103,6 +105,14 @@ object DependencyContainer {
 
     val getSortPreferenceUseCase: GetSortPreferenceUseCase by lazy {
         GetSortPreferenceUseCase(preferencesManager)
+    }
+
+    val getLibraryModeUseCase: GetLibraryModeUseCase by lazy {
+        GetLibraryModeUseCase(preferencesManager)
+    }
+
+    val setLibraryModeUseCase: SetLibraryModeUseCase by lazy {
+        SetLibraryModeUseCase(preferencesManager)
     }
 
     fun getViewModelFactory(context: Context): ViewModelProvider.Factory {

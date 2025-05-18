@@ -23,7 +23,9 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
                     saveBookUseCase = DependencyContainer.saveBookUseCase,
                     setSortPreferenceUseCase = DependencyContainer.setSortPreferenceUseCase,
                     switchModeUseCase = DependencyContainer.switchModeUseCase,
-                    getSortPreferenceUseCase = DependencyContainer.getSortPreferenceUseCase
+                    getSortPreferenceUseCase = DependencyContainer.getSortPreferenceUseCase,
+                    setLibraryModeUseCase = DependencyContainer.setLibraryModeUseCase,
+                    getLibraryModeUseCase = DependencyContainer.getLibraryModeUseCase
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: $modelClass")

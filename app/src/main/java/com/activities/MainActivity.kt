@@ -81,7 +81,11 @@ class MainActivity : AppCompatActivity(), FragmentCloseListener, OpenDetailFragm
         supportFragmentManager.commit {
             replace(R.id.listFragment, ListFragment())
             viewModel.currentState.value?.let { (item, isNew) ->
-                replace(R.id.detailContainer, DetailFragment.newInstance(isNew, item!!))
+                if (item is LibraryObjects) {
+                    replace(R.id.detailContainer, DetailFragment.newInstance(isNew, item))
+                } else {
+                    replace(R.id.detailContainer, EmptyFragment())
+                }
             } ?: run {
                 replace(R.id.detailContainer, EmptyFragment())
             }
@@ -96,8 +100,12 @@ class MainActivity : AppCompatActivity(), FragmentCloseListener, OpenDetailFragm
 
         supportFragmentManager.commit {
             viewModel.currentState.value?.let { (item, isNew) ->
-                replace(R.id.nav_host_fragment, DetailFragment.newInstance(isNew, item!!))
-                addToBackStack(null)
+                if (item is LibraryObjects) {
+                    replace(R.id.nav_host_fragment, DetailFragment.newInstance(isNew, item))
+                    addToBackStack(null)
+                } else {
+                    replace(R.id.nav_host_fragment, ListFragment())
+                }
             } ?: run {
                 replace(R.id.nav_host_fragment, ListFragment())
             }
