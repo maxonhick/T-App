@@ -19,5 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Library"
-include(":app")
+rootProject.name = "TBank_app"
+include(":app", ":domain", ":data")
+project(":domain").projectDir = file("domain")
+project(":data").projectDir = file("data")
