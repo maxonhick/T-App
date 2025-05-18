@@ -4,9 +4,8 @@ import com.database.entites.BookEntity
 import com.library.Book
 import com.library.TypeLibraryObjects
 import com.network.Volume
-import javax.inject.Inject
 
-class BookMapper @Inject constructor() {
+class BookMapper{
     fun toDomain(entity: BookEntity): Book = Book(
         objectId = entity.objectId,
         access = entity.access,

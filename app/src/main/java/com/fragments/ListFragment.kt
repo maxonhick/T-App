@@ -137,19 +137,17 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             val author = binding.etAuthor.text.toString()
             val title = binding.etTitle.text.toString()
 
-            if (author.length >= 3 || title.length >= 3) {
-                viewModel.searchGoogleBooks(
-                    author.takeIf { it.isNotEmpty() },
-                    title.takeIf { it.isNotEmpty() }
-                )
-            }
+            viewModel.searchGoogleBooks(
+                author.takeIf { it.isNotEmpty() },
+                title.takeIf { it.isNotEmpty() }
+            )
         }
+
+        validateSearch()
 
         binding.btnShowLibrary.setOnClickListener {
             viewModel.switchToLocalMode()
         }
-
-        validateSearch()
     }
 
     private fun validateSearch() {
@@ -220,7 +218,7 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     }
 
     private fun generateNewId(): Int {
-        return (viewModel.items.value?.maxOfOrNull { it.objectId } ?: 0) + 1
+        return (viewModel.items.value.maxOfOrNull { it.objectId } ?: 0) + 1
     }
 
     private fun canAddNewItem(): Boolean {
@@ -339,7 +337,6 @@ class ListFragment : Fragment(R.layout.fragment_list) {
                     sortByName.visibility = View.GONE
                     sortByDate.visibility = View.GONE
                 }
-                null -> {}
             }
         }
     }

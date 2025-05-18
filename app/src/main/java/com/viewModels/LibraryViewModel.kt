@@ -8,6 +8,7 @@ import com.library.LibraryMode
 import com.library.LibraryObjects
 import com.useCases.AddItemUseCase
 import com.useCases.GetLibraryItemsUseCase
+import com.useCases.GetSortPreferenceUseCase
 import com.useCases.GetTotalCountUseCase
 import com.useCases.LoadMoreItemsUseCase
 import com.useCases.LoadPreviousItemsUseCase
@@ -29,7 +30,8 @@ class LibraryViewModel(
     private val searchBooksUseCase: SearchBooksUseCase,
     private val saveBookUseCase: SaveBookUseCase,
     private val setSortPreferenceUseCase: SetSortPreferenceUseCase,
-    private val switchModeUseCase: SwitchModeUseCase
+    private val switchModeUseCase: SwitchModeUseCase,
+    private val getSortPreferenceUseCase: GetSortPreferenceUseCase
 ) : ViewModel() {
 
     private val _screenState = MutableStateFlow<ScreenState>(ScreenState.Loading)
@@ -51,7 +53,12 @@ class LibraryViewModel(
     private val currentLimit = 30
 
     init {
+        setSortPreference()
         loadInitialData()
+    }
+
+    private fun setSortPreference() {
+        _sortByName.value = getSortPreferenceUseCase().getOrThrow()
     }
 
     fun loadInitialData() {

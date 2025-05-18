@@ -12,14 +12,14 @@ import com.library.LibraryObjects
 import com.library.Newspaper
 import com.mappers.BookMapper
 import com.mappers.DiskMapper
-import com.mappers.GoogleBooksMapper
 import com.mappers.NewspaperMapper
+import com.network.ApiClient
 import com.network.GoogleBooksApiService
 import javax.inject.Inject
 
 class LibraryRepositoryImpl(
     private val localDataSource: LibraryDao,
-    private val remoteDataSource: GoogleBooksApiService,
+    private val remoteDataSource: ApiClient,
     private val bookMapper: BookMapper,
     private val diskMapper: DiskMapper,
     private val newspaperMapper: NewspaperMapper,
@@ -107,7 +107,7 @@ class LibraryRepositoryImpl(
 
     override suspend fun searchGoogleBooks(query: String): List<Book> {
         return try {
-            val response = remoteDataSource.searchBooks(query)
+            val response = remoteDataSource.googleBooksService.searchBooks(query)
             response.items?.mapNotNull { volume ->
                 bookMapper.fromNetwork(volume)?.also { book ->
                     // Сохраняем время последнего поиска

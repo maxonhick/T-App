@@ -1,10 +1,9 @@
-package com
+package com.preferences
 
 import android.content.Context
 import com.library.LibraryMode
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 import androidx.core.content.edit
+import com.PreferencesManager
 
 class PreferencesManagerImpl (
     private val context: Context

@@ -2,18 +2,18 @@ package com
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
-import androidx.room.Room
 import com.database.dao.LibraryDao
 import com.library.data.LibraryDatabase
 import com.mappers.BookMapper
 import com.mappers.DiskMapper
-import com.mappers.GoogleBooksMapper
 import com.mappers.NewspaperMapper
-import com.network.GoogleBooksApiService
+import com.network.ApiClient
+import com.preferences.PreferencesManagerImpl
 import com.repositories.LibraryRepository
 import com.repositories.LibraryRepositoryImpl
 import com.useCases.AddItemUseCase
 import com.useCases.GetLibraryItemsUseCase
+import com.useCases.GetSortPreferenceUseCase
 import com.useCases.GetTotalCountUseCase
 import com.useCases.LoadMoreItemsUseCase
 import com.useCases.LoadPreviousItemsUseCase
@@ -21,11 +21,7 @@ import com.useCases.SaveBookUseCase
 import com.useCases.SearchBooksUseCase
 import com.useCases.SetSortPreferenceUseCase
 import com.useCases.SwitchModeUseCase
-import com.viewModels.LibraryViewModel
-import com.viewModels.MainViewModel
 import com.viewModels.ViewModelFactory
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 object DependencyContainer {
 
@@ -39,34 +35,17 @@ object DependencyContainer {
 
     // --- База данных (Room) ---
     private val libraryDatabase: LibraryDatabase by lazy {
-        Room.databaseBuilder(
-            appContext,
-            LibraryDatabase::class.java,
-            "library.db"
-        ).build()
+        LibraryDatabase.getDatabase(appContext)
     }
 
     private val libraryDao: LibraryDao by lazy {
         libraryDatabase.libraryDao()
     }
 
-    // --- Сетевые зависимости (Retrofit) ---
-    private val retrofit: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl("https://www.googleapis.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    private val googleBooksApiService: GoogleBooksApiService by lazy {
-        retrofit.create(GoogleBooksApiService::class.java)
-    }
-
     // --- Мапперы ---
     private val bookMapper: BookMapper by lazy { BookMapper() }
     private val diskMapper: DiskMapper by lazy { DiskMapper() }
     private val newspaperMapper: NewspaperMapper by lazy { NewspaperMapper() }
-    private val googleBooksMapper: GoogleBooksMapper by lazy { GoogleBooksMapper() }
 
     // --- Preferences ---
     val preferencesManager: PreferencesManager by lazy {
@@ -77,7 +56,7 @@ object DependencyContainer {
     val libraryRepository: LibraryRepository by lazy {
         LibraryRepositoryImpl(
             localDataSource = libraryDao,
-            remoteDataSource = googleBooksApiService,
+            remoteDataSource = ApiClient,
             bookMapper = bookMapper,
             diskMapper = diskMapper,
             newspaperMapper = newspaperMapper,
@@ -120,6 +99,10 @@ object DependencyContainer {
 
     val switchModeUseCase: SwitchModeUseCase by lazy {
         SwitchModeUseCase(preferencesManager)
+    }
+
+    val getSortPreferenceUseCase: GetSortPreferenceUseCase by lazy {
+        GetSortPreferenceUseCase(preferencesManager)
     }
 
     fun getViewModelFactory(context: Context): ViewModelProvider.Factory {

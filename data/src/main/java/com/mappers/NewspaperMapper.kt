@@ -3,9 +3,8 @@ package com.mappers
 import com.database.entites.NewspaperEntity
 import com.library.Newspaper
 import com.library.TypeLibraryObjects
-import javax.inject.Inject
 
-class NewspaperMapper @Inject constructor() {
+class NewspaperMapper {
 
     // Domain -> Entity
     fun toEntity(newspaper: Newspaper): NewspaperEntity = NewspaperEntity(

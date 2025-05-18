@@ -3,9 +3,8 @@ package com.mappers
 import com.database.entites.DiskEntity
 import com.library.Disk
 import com.library.TypeLibraryObjects
-import javax.inject.Inject
 
-class DiskMapper @Inject constructor() {
+class DiskMapper{
 
     // Domain -> Entity
     fun toEntity(disk: Disk): DiskEntity = DiskEntity(

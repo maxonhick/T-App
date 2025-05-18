@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.DependencyContainer
-import com.library.activity.MainActivity
-import com.useCases.*
 
 class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
 
@@ -24,7 +22,8 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
                     searchBooksUseCase = DependencyContainer.searchBooksUseCase,
                     saveBookUseCase = DependencyContainer.saveBookUseCase,
                     setSortPreferenceUseCase = DependencyContainer.setSortPreferenceUseCase,
-                    switchModeUseCase = DependencyContainer.switchModeUseCase
+                    switchModeUseCase = DependencyContainer.switchModeUseCase,
+                    getSortPreferenceUseCase = DependencyContainer.getSortPreferenceUseCase
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
