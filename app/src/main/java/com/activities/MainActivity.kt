@@ -6,6 +6,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
+import androidx.lifecycle.ViewModelProvider
 import com.DependencyContainer
 import com.fragments.DetailFragment
 import com.fragments.DetailFragment.Companion.CURRENT_ITEM
@@ -19,13 +20,18 @@ import com.library.R
 import com.library.databinding.ActivityMainBinding
 import com.viewModels.MainViewModel
 import com.viewModels.ViewModelFactory
+import jakarta.inject.Inject
 
 class MainActivity : AppCompatActivity(), FragmentCloseListener, OpenDetailFragment {
 
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: MainViewModel by viewModels {
-        DependencyContainer.getViewModelFactory(applicationContext)
-    }
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel: MainViewModel by viewModels (
+        factoryProducer = { viewModelFactory }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -209,7 +209,6 @@ class LibraryViewModel(
             val result = switchModeUseCase(LibraryMode.GOOGLE)
             if (result.isSuccess) {
                 _currentMode.value = result.getOrThrow()
-                _googleBooks.value = emptyList()
                 setLibraryModeUseCase(LibraryMode.GOOGLE)
             } else {
                 handleError(result.exceptionOrNull())
@@ -223,6 +222,7 @@ class LibraryViewModel(
             if (result.isSuccess) {
                 _currentMode.value = result.getOrThrow()
                 loadInitialData()
+                _googleBooks.value = emptyList()
                 setLibraryModeUseCase(LibraryMode.LOCAL)
             } else {
                 handleError(result.exceptionOrNull())
