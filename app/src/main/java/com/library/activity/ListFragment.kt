@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
@@ -59,6 +60,8 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         binding.recyclerView.layoutManager?.scrollToPosition(scrollPosition)
 
         setupRecyclerView()
+        setupSearchView()
+        showLibraryState()
         setupClickListeners()
 
         setFragmentResultListener(NEW_ITEM) { requestKey, bundle ->
@@ -69,9 +72,25 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             closeListener?.closeDetailFragment()
         }
 
+        viewModel.currentMode.observe(viewLifecycleOwner) {mode ->
+            when (mode!!) {
+                LibraryMod.LOCAL -> {
+                    showLibraryState()
+                }
+                LibraryMod.GOOGLE -> {
+                    showSearchState()
+                }
+            }
+            updateAdapter()
+        }
+
         viewModel.screenState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ScreenState.Loading -> showLoadingState()
+                is ScreenState.Loading -> {
+                    if (viewModel.currentMode.value == LibraryMod.GOOGLE && viewModel.isSearchRequested()) {
+                        showLoadingState()
+                    }
+                }
                 is ScreenState.Content -> showContentState(state)
                 is ScreenState.Error -> showErrorState(state)
                 is ScreenState.Empty -> showEmptyState()
@@ -90,18 +109,113 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         viewModel.sortByName.observe(viewLifecycleOwner) { sortByName ->
             updateSortButtons(sortByName)
         }
+
+        viewModel.googleBooks.observe(viewLifecycleOwner) { books ->
+            if (!viewModel.searchQuery.value.isNullOrEmpty()) {
+                adapter.submitList(books)
+            }
+        }
+    }
+
+    private fun setupSearchView() {
+        binding.etAuthor.doAfterTextChanged {
+            validateSearch()
+        }
+
+        binding.etTitle.doAfterTextChanged {
+            validateSearch()
+        }
+
+        binding.btnSearch.setOnClickListener {
+            val author = binding.etAuthor.text.toString()
+            val title = binding.etTitle.text.toString()
+
+            if (author.length >= 3 || title.length >= 3) {
+                showLoadingState()
+                viewModel.searchGoogleBooks(
+                    author.takeIf { it.isNotEmpty() },
+                    title.takeIf { it.isNotEmpty() }
+                )
+            }
+        }
+
+        binding.btnShowLibrary.setOnClickListener {
+            viewModel.switchToLocalMode()
+            showLibraryState()
+        }
+
+        validateSearch()
+    }
+
+    private fun validateSearch() {
+        val authorValid = (binding.etAuthor.text?.length ?: 0) >= 3
+        val titleValid = (binding.etTitle.text?.length ?: 0) >= 3
+        binding.btnSearch.isEnabled = authorValid || titleValid
+    }
+
+    private fun updateAdapter() {
+        when (viewModel.currentMode.value) {
+            LibraryMod.LOCAL -> {
+                adapter.submitList(viewModel.items.value)
+                viewModel.loadInitialData()
+            }
+            LibraryMod.GOOGLE -> {
+                adapter.submitList(viewModel.googleBooks.value)
+            }
+            null -> {}
+        }
     }
 
     private fun setupRecyclerView() {
-        adapter = LibraryAdapter { item ->
-            openDetailListener?.showDetail(item, false)
-        }
+        adapter = LibraryAdapter(
+            onItemClick = { item ->
+                openDetailListener?.showDetail(item, false)
+            },
+            onItemLongClick = { book ->
+                if (viewModel.googleBooks.value?.isNotEmpty() == true) {
+                    viewModel.saveGoogleBook(book)
+                    Toast.makeText(requireContext(), "Книга сохранена", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
 
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = this@ListFragment.adapter
             addOnScrollListener(createScrollListener())
         }
+    }
+
+    private fun showSearchState() {
+        with(binding) {
+            shimmerViewContainer.stopShimmer()
+            shimmerViewContainer.visibility = View.GONE
+            recyclerView.visibility = View.GONE
+            searchPanel.visibility = View.VISIBLE
+            sortByName.visibility = View.GONE
+            sortByDate.visibility = View.GONE
+            buttonContainer.visibility = View.GONE
+            errorContainer.visibility = View.GONE
+            emptyState.visibility = View.GONE
+        }
+
+        // Очищаем предыдущие результаты поиска
+        viewModel.clearGoogleBooks()
+        adapter.submitList(emptyList())
+        updateAdapter()
+    }
+
+    private fun showLibraryState() {
+        with(binding) {
+            searchPanel.visibility = View.GONE
+            sortByName.visibility = View.VISIBLE
+            sortByDate.visibility = View.VISIBLE
+            buttonContainer.visibility = View.VISIBLE
+            shimmerViewContainer.visibility = View.GONE
+        }
+
+        adapter.submitList(viewModel.items.value)
+        updateAdapter()
     }
 
     private fun createScrollListener() = object : RecyclerView.OnScrollListener() {
@@ -178,6 +292,18 @@ class ListFragment : Fragment(R.layout.fragment_list) {
         binding.sortByDate.setOnClickListener {
             viewModel.setSortByName(false)
             scrollToTop()
+        }
+
+        binding.btnShowLibrary.setOnClickListener {
+            viewModel.clearSearchQuery()
+            viewModel.switchToLocalMode()
+            showLibraryState()
+        }
+
+        binding.btnShowSearch.setOnClickListener {
+            viewModel.switchToGoogleMode()
+            showSearchState()
+            adapter.submitList(emptyList())
         }
     }
 
@@ -261,24 +387,30 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     }
 
     private fun showContentState(state: ScreenState.Content) {
-        with(binding) {
+        binding.apply {
             shimmerViewContainer.stopShimmer()
             shimmerViewContainer.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
             errorContainer.visibility = View.GONE
             emptyState.visibility = View.GONE
-            buttonContainer.visibility = View.VISIBLE
-            addProgressBar.visibility = View.GONE
 
-            adapter.submitList(viewModel.items.value)
+            when (viewModel.currentMode.value) {
+                LibraryMod.LOCAL -> {
+                    buttonContainer.visibility = View.VISIBLE
+                    sortByName.visibility = View.VISIBLE
+                    sortByDate.visibility = View.VISIBLE
 
-            // Настройка видимости кнопок
-            loadMoreProgress.visibility = if (state.canLoadMore) View.VISIBLE else View.GONE
-            loadPreviousProgress.visibility = if (state.canLoadPrevious) View.VISIBLE else View.GONE
+                    adapter.submitList(viewModel.items.value)
+                }
+                LibraryMod.GOOGLE -> {
+                    buttonContainer.visibility = View.GONE
+                    sortByName.visibility = View.GONE
+                    sortByDate.visibility = View.GONE
 
-            addBook.isEnabled = true
-            addDisk.isEnabled = true
-            addNewspaper.isEnabled = true
+                    adapter.submitList(viewModel.googleBooks.value)
+                }
+                null -> {}
+            }
         }
     }
 
@@ -305,15 +437,16 @@ class ListFragment : Fragment(R.layout.fragment_list) {
             shimmerViewContainer.visibility = View.GONE
             recyclerView.visibility = View.GONE
             errorContainer.visibility = View.GONE
-            buttonContainer.visibility = View.VISIBLE
-            emptyState.visibility = View.VISIBLE
 
-            emptyMessage.text = ScreenState.Empty.emptyMessage
-
-            // Включаем кнопки добавления, так как список пуст
-            addBook.isEnabled = true
-            addDisk.isEnabled = true
-            addNewspaper.isEnabled = true
+            if (viewModel.searchQuery.value.isNullOrEmpty()) {
+                buttonContainer.visibility = View.VISIBLE
+                emptyState.visibility = View.VISIBLE
+                emptyMessage.text = "Ваша библиотека пуста"
+            } else {
+                buttonContainer.visibility = View.GONE
+                emptyState.visibility = View.VISIBLE
+                emptyMessage.text = "Книги не найдены"
+            }
         }
     }
 
