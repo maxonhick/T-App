@@ -2,7 +2,7 @@ package com.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.viewModels.MainViewModel
+import com.viewModels.LibraryViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,11 +11,11 @@ import javax.inject.Provider
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object MainActivityModule {
+internal object ListFragmentModule{
 
     @Provides
-    fun provideMainActivityModel(
-        impl: MainViewModel
+    fun provideLibraryViewModel(
+        impl: LibraryViewModel
     ): ViewModel = impl
 
     @Provides

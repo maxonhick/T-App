@@ -1,8 +1,9 @@
 package com.useCases
 
 import com.PreferencesManager
+import javax.inject.Inject
 
-class GetSortPreferenceUseCase(
+class GetSortPreferenceUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
     operator fun invoke(): Result<Boolean> = try {
