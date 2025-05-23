@@ -4,7 +4,7 @@ import com.library.LibraryObjects
 import com.repositories.LibraryRepository
 import javax.inject.Inject
 
-class AddItemUseCase(
+class AddItemUseCase @Inject constructor(
     private val repository: LibraryRepository
 ) {
     suspend operator fun invoke(item: LibraryObjects): Result<Unit> = try {

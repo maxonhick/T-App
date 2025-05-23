@@ -18,12 +18,13 @@ import com.useCases.SearchBooksUseCase
 import com.useCases.SetLibraryModeUseCase
 import com.useCases.SetSortPreferenceUseCase
 import com.useCases.SwitchModeUseCase
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class LibraryViewModel(
+class LibraryViewModel @Inject constructor(
     private val getLibraryItemsUseCase: GetLibraryItemsUseCase,
     private val getTotalCountUseCase: GetTotalCountUseCase,
     private val loadMoreItemsUseCase: LoadMoreItemsUseCase,
@@ -209,7 +210,6 @@ class LibraryViewModel(
             val result = switchModeUseCase(LibraryMode.GOOGLE)
             if (result.isSuccess) {
                 _currentMode.value = result.getOrThrow()
-                _googleBooks.value = emptyList()
                 setLibraryModeUseCase(LibraryMode.GOOGLE)
             } else {
                 handleError(result.exceptionOrNull())
@@ -223,6 +223,7 @@ class LibraryViewModel(
             if (result.isSuccess) {
                 _currentMode.value = result.getOrThrow()
                 loadInitialData()
+                _googleBooks.value = emptyList()
                 setLibraryModeUseCase(LibraryMode.LOCAL)
             } else {
                 handleError(result.exceptionOrNull())

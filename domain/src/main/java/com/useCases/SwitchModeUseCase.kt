@@ -4,7 +4,7 @@ import com.PreferencesManager
 import com.library.LibraryMode
 import javax.inject.Inject
 
-class SwitchModeUseCase(
+class SwitchModeUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
     operator fun invoke(mode: LibraryMode): Result<LibraryMode> = try {

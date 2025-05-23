@@ -6,7 +6,8 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
-import com.DependencyContainer
+import androidx.lifecycle.ViewModelProvider
+import com.di.MainActivityComponentProvider
 import com.fragments.DetailFragment
 import com.fragments.DetailFragment.Companion.CURRENT_ITEM
 import com.fragments.DetailFragment.Companion.IS_NEW
@@ -18,18 +19,24 @@ import com.library.LibraryObjects
 import com.library.R
 import com.library.databinding.ActivityMainBinding
 import com.viewModels.MainViewModel
-import com.viewModels.ViewModelFactory
+import jakarta.inject.Inject
 
 class MainActivity : AppCompatActivity(), FragmentCloseListener, OpenDetailFragment {
 
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: MainViewModel by viewModels {
-        DependencyContainer.getViewModelFactory(applicationContext)
-    }
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel: MainViewModel by viewModels (
+        factoryProducer = { viewModelFactory }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        val component = (applicationContext as MainActivityComponentProvider).getMainActivityComponent()
+        component.inject(this)
         setContentView(binding.root)
 
         // 1. Восстановление состояния при повороте

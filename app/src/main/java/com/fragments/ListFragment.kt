@@ -10,10 +10,10 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.DependencyContainer
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.fragments.DetailFragment.Companion.NEW_ITEM
 import com.library.Book
@@ -28,17 +28,22 @@ import com.interfaces.FragmentCloseListener
 import com.viewModels.LibraryViewModel
 import com.interfaces.OpenDetailFragment
 import com.ScreenState
+import com.di.ListFragmentComponentProvider
 import com.library.LibraryMode
 import com.library.databinding.FragmentListBinding
 import com.viewModels.recycler.LibraryAdapter
+import jakarta.inject.Inject
 
 const val SCROLL_POSITION = "SCROLL_POSITION"
 
 class ListFragment : Fragment(R.layout.fragment_list) {
     private lateinit var binding: FragmentListBinding
-    private val viewModel: LibraryViewModel by viewModels {
-        DependencyContainer.getViewModelFactory(requireContext())
-    }
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+    private val viewModel: LibraryViewModel by viewModels(
+        factoryProducer = { viewModelFactory }
+    )
     private lateinit var adapter: LibraryAdapter
     private var scrollPosition: Int = 0
     private var closeListener: FragmentCloseListener? = null
@@ -66,6 +71,8 @@ class ListFragment : Fragment(R.layout.fragment_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentListBinding.bind(view)
+        val component = (requireActivity().applicationContext as ListFragmentComponentProvider).getListFragmentComponent()
+        component.inject(this)
 
         if (savedInstanceState != null) {
             scrollPosition = savedInstanceState.getInt(SCROLL_POSITION, 0)

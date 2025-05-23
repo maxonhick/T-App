@@ -3,7 +3,7 @@ package com.useCases
 import com.library.LibraryObjects
 import javax.inject.Inject
 
-class LoadPreviousItemsUseCase(
+class LoadPreviousItemsUseCase @Inject constructor(
     private val getItemsUseCase: GetLibraryItemsUseCase
 ) {
     suspend operator fun invoke(
